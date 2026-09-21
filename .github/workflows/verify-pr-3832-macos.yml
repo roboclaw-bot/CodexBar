@@ -1,9 +1,9 @@
 name: Verify PR 3832 on macOS
-run-name: macOS verification of PR 3832 at 6dad914fc
+run-name: macOS verification of PR 3832 at 0601278c0
 
 on:
   push:
-    branches: [verify/codexbar-3832-6dad914fc]
+    branches: [verify/codexbar-3832-final]
 
 permissions:
   contents: read
@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: roboclaw-bot/CodexBar
-          ref: 6dad914fca02465d160a47e327ba2a901c1c6ba4
+          ref: 0601278c0bce1a31800e0d45120865f0926a6f5e
           persist-credentials: false
 
       - name: Verify source provenance and select the repository CI toolchain
@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 6dad914fca02465d160a47e327ba2a901c1c6ba4
+          test "$(git rev-parse HEAD)" = 0601278c0bce1a31800e0d45120865f0926a6f5e
           sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
           echo "DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer" >> "$GITHUB_ENV"
           [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.6* ]]
@@ -48,9 +48,23 @@ jobs:
           printf 'Source commit: `%s`\n\nIndependent fork verification; not an upstream CI approval.\n' \
             "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Restore SwiftPM build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+          key: verify-macos26-${{ hashFiles('Package.resolved', 'Package.swift') }}-${{ matrix.shard-index }}
+          restore-keys: |
+            verify-macos26-${{ hashFiles('Package.resolved', 'Package.swift') }}-
+
       - name: Full repository checks on macOS
         if: ${{ matrix.shard-index == 0 }}
         run: make check
+
+      - name: Focused account, deadline, rendering, and architecture regressions
+        if: ${{ matrix.shard-index == 0 }}
+        run: swift test --filter 'DashboardMultiAccountTests|CLIServeTimeoutTests|CLIServeWebUITests|ProviderArchitectureGatekeeperTests'
 
       - name: Full macOS test suite, repository-standard sharding
         id: tests
