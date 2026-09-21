@@ -114,6 +114,7 @@ sources and setup guide. The [provider ID list](provider-ids.md) is generated fr
   - Force enhanced mode elsewhere with `CODEXBAR_CARDS_ENHANCED=1`.
   - Exit code is non-zero when any provider fetch fails.
 - `codexbar dashboard` prints one dashboard-v1 JSON snapshot and exits.
+  - `--all-accounts` opts into visible Codex profiles and configured token accounts, grouped under each provider's `accounts[]`. Top-level usage remains the selected account; the default stays selected-account only (existing claude-swap enrichment is unchanged).
   - Honors enabled providers in stable order, carries configured display sort keys, and defaults to full account identity; `--identity redacted` hides email local parts.
   - Provider failures remain row-level errors alongside healthy rows; a valid partial snapshot exits `0`.
   - Stdout contains only the snapshot document. Diagnostics and optional `--json-output` logs go to stderr.
@@ -121,6 +122,7 @@ sources and setup guide. The [provider ID list](provider-ids.md) is generated fr
   - `--output <path>` atomically writes the snapshot to a file (`0644`) instead of stdout — staged in the destination directory, fsync'd, then renamed over the target so readers never observe a partial document. The parent directory must already exist (it is not created), and stdout stays silent on success.
   - Starts no HTTP server and requires no dashboard bearer token. See `docs/dashboard-api.md` for the shared payload contract.
 - `codexbar serve` starts a foreground HTTP server for usage and cost JSON, a token-gated dashboard snapshot, and a built-in web UI at `/`.
+  - `--all-accounts` enables the same account expansion for dashboard snapshots. It is a startup opt-in, not a query parameter; `/usage` keeps its existing Codex enumeration and `/cost` is unchanged.
   - Web usage bars follow the app's **Usage bars fill** setting, read per request on macOS. Dashboard snapshots from
     both `serve` and `codexbar dashboard` expose it as `host.usageBarsShowUsed`. An absent setting defaults to remaining
     percentages, including on Linux; earlier web dashboards always showed used percentages. Quota values are unchanged.

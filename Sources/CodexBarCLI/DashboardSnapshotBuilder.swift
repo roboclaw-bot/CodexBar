@@ -27,14 +27,17 @@ enum DashboardSnapshotBuilder {
         refreshInterval: TimeInterval,
         codexBarVersion: String?,
         claudeSwap: DashboardClaudeSwapInput? = nil,
-        usageBarsShowUsed: Bool = false) -> DashboardSnapshotPayload
+        usageBarsShowUsed: Bool = false,
+        allAccounts: Bool = false) -> DashboardSnapshotPayload
     {
         var costByProvider: [String: CostPayload] = [:]
         for cost in costPayloads {
             costByProvider[cost.provider] = cost
         }
         var attachedClaudeSwap = false
-        let providers = usagePayloads.enumerated().map { index, payload in
+        let grouped = Dictionary(grouping: usagePayloads, by: \.provider)
+        let selectedPayloads = self.selectedPayloads(usagePayloads, allAccounts: allAccounts)
+        let providers = selectedPayloads.enumerated().map { index, payload in
             var rowClaudeSwap: DashboardClaudeSwapInput?
             // Provider-specific by design: claude-swap account data belongs only on the first Claude row.
             if !attachedClaudeSwap, UsageProvider(rawValue: payload.provider) == .claude {
@@ -51,7 +54,8 @@ enum DashboardSnapshotBuilder {
                 presentation: presentation,
                 identityMode: identityMode,
                 generatedAt: generatedAt,
-                claudeSwap: rowClaudeSwap)
+                claudeSwap: rowClaudeSwap,
+                accountPayloads: allAccounts ? grouped[payload.provider] : nil)
         }
 
         let refreshSeconds = self.dashboardRefreshSeconds(refreshInterval)
@@ -117,13 +121,25 @@ enum DashboardSnapshotBuilder {
         presentation: ProviderPresentation,
         identityMode: DashboardIdentityMode,
         generatedAt: Date,
-        claudeSwap: DashboardClaudeSwapInput?) -> DashboardProviderPayload
+        claudeSwap: DashboardClaudeSwapInput?,
+        accountPayloads: [ProviderPayload]?) -> DashboardProviderPayload
     {
         let provider = UsageProvider(rawValue: payload.provider)
         let descriptor = provider.map { ProviderDescriptorRegistry.descriptor(for: $0) }
         let metadata = descriptor?.metadata
 
-        let error = payload.error ?? cost?.error
+        let rawError = payload.error ?? cost?.error
+        let error = accountPayloads == nil ? rawError : rawError.map {
+            ProviderErrorPayload(
+                code: $0.code,
+                message: identityMode == .none
+                    ? "Account usage unavailable"
+                    : self.redactEmailShapedText($0.message, mode: identityMode),
+                kind: $0.kind)
+        }
+        let collectedAccounts = accountPayloads?.compactMap { payload in
+            self.makeUsageAccount(payload, identityMode: identityMode)
+        }
         let accounts = claudeSwap?.adapterError == nil
             ? claudeSwap?.accounts?.map { account in
                 self.makeClaudeSwapAccount(
@@ -152,8 +168,45 @@ enum DashboardSnapshotBuilder {
                 cost: cost,
                 error: error,
                 generatedAt: generatedAt),
-            accounts: accounts,
+            // Keep the explicit Claude adapter authoritative when configured.
+            accounts: accounts ?? (collectedAccounts?.isEmpty == false ? collectedAccounts : nil),
             accountsError: claudeSwap?.adapterError)
+    }
+
+    /// Keep provider ordering, but use the selected account rather than discovery order.
+    static func selectedPayloads(_ payloads: [ProviderPayload], allAccounts: Bool) -> [ProviderPayload] {
+        guard allAccounts else { return payloads }
+        let groups = Dictionary(grouping: payloads, by: \.provider)
+        var seen = Set<String>()
+        return payloads.compactMap { payload in
+            guard seen.insert(payload.provider).inserted else { return nil }
+            return groups[payload.provider]?.first { $0.dashboardAccount?.active == true } ?? payload
+        }
+    }
+
+    private static func makeUsageAccount(
+        _ payload: ProviderPayload,
+        identityMode: DashboardIdentityMode) -> DashboardAccountPayload?
+    {
+        guard let account = payload.dashboardAccount else { return nil }
+        let provider = UsageProvider(rawValue: payload.provider)
+        let metadata = provider.map { ProviderDescriptorRegistry.descriptor(for: $0).metadata }
+        let label = identityMode == .none
+            ? "Account"
+            : self.redactEmailShapedText(account.label, mode: identityMode)
+        return DashboardAccountPayload(
+            id: account.id,
+            label: label.isEmpty ? "Account" : label,
+            active: account.active,
+            identity: self.makeIdentity(provider: provider, usage: payload.usage, mode: identityMode),
+            windows: self.makeWindows(provider: provider, metadata: metadata, usage: payload.usage),
+            pace: payload.pace,
+            error: payload.error.map {
+                identityMode == .none
+                    ? "Account usage unavailable"
+                    : self.redactEmailShapedText($0.message, mode: identityMode)
+            },
+            updatedAt: payload.usage?.updatedAt)
     }
 
     private static func providerPresentation(

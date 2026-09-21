@@ -275,13 +275,16 @@ extension CodexBarCLI {
             let accounts = tokenContext.visibleCodexAccounts().visibleAccounts
             let selections: [CodexVisibleAccount?] = accounts.isEmpty ? [nil] : accounts.map { Optional($0) }
             for visibleAccount in selections {
-                let result = await Self.fetchUsageOutput(
+                var result = await Self.fetchUsageOutput(
                     provider: provider,
                     account: nil,
                     codexVisibleAccount: visibleAccount,
                     status: status,
                     tokenContext: tokenContext,
                     command: command)
+                if let visibleAccount {
+                    result.attachDashboardAccount(.codex(visibleAccount))
+                }
                 output.merge(result)
             }
             return output
@@ -312,12 +315,17 @@ extension CodexBarCLI {
                     return output
                 }
             }
-            let result = await Self.fetchUsageOutput(
+            var result = await Self.fetchUsageOutput(
                 provider: provider,
                 account: account,
                 status: status,
                 tokenContext: tokenContext,
                 command: command)
+            if let account {
+                let data = tokenContext.accountsByProvider[provider]
+                let activeID = data.flatMap { $0.accounts.isEmpty ? nil : $0.accounts[$0.clampedActiveIndex()].id }
+                result.attachDashboardAccount(.token(account, active: account.id == activeID))
+            }
             output.merge(result)
         }
         return output

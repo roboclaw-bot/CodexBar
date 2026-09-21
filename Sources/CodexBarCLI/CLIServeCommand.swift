@@ -3,6 +3,9 @@ import Commander
 import Foundation
 
 struct ServeOptions: CommanderParsable {
+    @Flag(name: .long("all-accounts"), help: "Include all local accounts in dashboard snapshots")
+    var allAccounts: Bool = false
+
     @Flag(names: [.short("v"), .long("verbose")], help: "Enable verbose logging")
     var verbose: Bool = false
 
@@ -129,6 +132,7 @@ struct ServeRuntime {
     /// setting. An explicit `--identity redacted` hides email local parts from every
     /// authorized dashboard client and ignores the app setting.
     let dashboardIdentityMode: DashboardIdentityMode?
+    let dashboardAllAccounts: Bool
     /// True for non-loopback binds: every data route (`/usage`, `/cost`,
     /// `/dashboard/v1/snapshot`) then requires the bearer token, so account data
     /// is never exposed to the network unauthenticated. `/` and `/health` stay open.
@@ -145,6 +149,7 @@ struct ServeRuntime {
         healthVersion: String?,
         dashboardAuth: CLIServeDashboardAuth,
         dashboardIdentityMode: DashboardIdentityMode? = nil,
+        dashboardAllAccounts: Bool = false,
         bindHost: String)
     {
         self.configStore = configStore
@@ -156,6 +161,7 @@ struct ServeRuntime {
         self.healthVersion = healthVersion
         self.dashboardAuth = dashboardAuth
         self.dashboardIdentityMode = dashboardIdentityMode
+        self.dashboardAllAccounts = dashboardAllAccounts
         self.dataRoutesRequireAuth = !CLIServeSecurity.isLoopbackHost(bindHost)
     }
 }
@@ -181,6 +187,7 @@ struct ServeUsageContext: Sendable {
     let providerDeadline: ContinuousClock.Instant?
     let providerOperations: CLIServeOperationCoordinator<UsageCommandOutput>
     let includeAllCodexAccounts: Bool
+    let includeAllAccounts: Bool
     let persistCLISessions: Bool
 
     init(
@@ -191,6 +198,7 @@ struct ServeUsageContext: Sendable {
         providerDeadline: ContinuousClock.Instant?,
         providerOperations: CLIServeOperationCoordinator<UsageCommandOutput>,
         includeAllCodexAccounts: Bool = true,
+        includeAllAccounts: Bool = false,
         persistCLISessions: Bool = true)
     {
         self.config = config
@@ -200,6 +208,7 @@ struct ServeUsageContext: Sendable {
         self.providerDeadline = providerDeadline
         self.providerOperations = providerOperations
         self.includeAllCodexAccounts = includeAllCodexAccounts
+        self.includeAllAccounts = includeAllAccounts
         self.persistCLISessions = persistCLISessions
     }
 }
@@ -738,6 +747,7 @@ extension CodexBarCLI {
             healthVersion: Self.currentVersion(),
             dashboardAuth: CLIServeDashboardAuth(bearer: dashboardBearer),
             dashboardIdentityMode: dashboardIdentityMode,
+            dashboardAllAccounts: values.flags.contains("allAccounts"),
             bindHost: bindHost)
         let server = CLILocalHTTPServer(
             host: bindHost,
@@ -1006,7 +1016,8 @@ extension CodexBarCLI {
             operationKey = try Self.serveDashboardOperationKey(
                 identityMode: identityMode,
                 usageBarsShowUsed: usageBarsShowUsed,
-                provider: provider)
+                provider: provider,
+                allAccounts: runtime.dashboardAllAccounts)
             detail = try Self.dashboardSnapshotDetail(rawDetail)
             providers = try Self.dashboardSnapshotProviders(provider)
         } catch {
@@ -1039,7 +1050,8 @@ extension CodexBarCLI {
                             providerTimeout: providerTimeout,
                             providerDeadline: providerDeadline,
                             providerOperations: runtime.providerOperations,
-                            includeAllCodexAccounts: false),
+                            includeAllCodexAccounts: runtime.dashboardAllAccounts,
+                            includeAllAccounts: runtime.dashboardAllAccounts),
                         costCollection: ServeCostCollectionContext(
                             configFingerprint: snapshot.cacheToken,
                             providerTimeout: providerTimeout,
@@ -1098,10 +1110,12 @@ extension CodexBarCLI {
     static func serveDashboardOperationKey(
         identityMode: DashboardIdentityMode,
         usageBarsShowUsed: Bool,
-        provider: String?) throws -> String
+        provider: String?,
+        allAccounts: Bool = false) throws -> String
     {
         try self.serveOperationKey(
-            kind: "dashboard-\(identityMode.rawValue)-\(usageBarsShowUsed ? "used" : "remaining")",
+            kind: "dashboard-\(identityMode.rawValue)-\(usageBarsShowUsed ? "used" : "remaining")"
+                + (allAccounts ? "-all-accounts" : ""),
             provider: provider)
     }
 
@@ -1307,6 +1321,10 @@ extension CodexBarCLI {
             config: context.config,
             verbose: false)
 
+        let allTokenContext = try TokenAccountCLIContext(
+            selection: TokenAccountCLISelection(label: nil, index: nil, allAccounts: true),
+            config: context.config,
+            verbose: false)
         let browserDetection = BrowserDetection()
         let command = UsageCommandContext(
             format: .json,
@@ -1333,7 +1351,8 @@ extension CodexBarCLI {
             providers: selection.asList,
             configFingerprint: Self.serveUsageOperationFingerprint(
                 configFingerprint: context.configFingerprint,
-                includeAllCodexAccounts: context.includeAllCodexAccounts),
+                includeAllCodexAccounts: context.includeAllCodexAccounts,
+                includeAllAccounts: context.includeAllAccounts),
             deadline: context.providerDeadline,
             operations: context.providerOperations)
         { provider in
@@ -1341,17 +1360,28 @@ extension CodexBarCLI {
                 await Self.fetchUsageOutputs(
                     provider: provider,
                     status: nil,
-                    tokenContext: tokenContext,
+                    tokenContext: Self.serveIncludesConfiguredAccounts(
+                        provider: provider, config: context.config, allAccounts: context.includeAllAccounts)
+                        ? allTokenContext : tokenContext,
                     command: command)
             }
         }
     }
 
+    static func serveIncludesConfiguredAccounts(
+        provider: UsageProvider, config: CodexBarConfig, allAccounts: Bool) -> Bool
+    {
+        allAccounts && TokenAccountSupportCatalog.support(for: provider) != nil
+            && config.providerConfig(for: provider)?.tokenAccounts?.accounts.isEmpty == false
+    }
+
     static func serveUsageOperationFingerprint(
         configFingerprint: String,
-        includeAllCodexAccounts: Bool) -> String
+        includeAllCodexAccounts: Bool,
+        includeAllAccounts: Bool = false) -> String
     {
         "\(configFingerprint):codex-accounts=\(includeAllCodexAccounts ? "all" : "selected")"
+            + (includeAllAccounts ? ":token-accounts=all" : "")
     }
 
     /// Adapts the shared dashboard snapshot producer to the authenticated HTTP

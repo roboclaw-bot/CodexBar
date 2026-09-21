@@ -173,7 +173,7 @@ extension CodexBarCLI {
 
         Usage:
           codexbar dashboard [--pretty] [--timeout <seconds>] [--output <path>]
-                             [--identity <redacted|full>]
+                             [--identity <redacted|full>] [--all-accounts]
                              [--json-output] [--log-level <trace|verbose|debug|info|warning|error|critical>]
                              [-v|--verbose]
 
@@ -182,6 +182,8 @@ extension CodexBarCLI {
           in stable order and keeps provider failures as row-level errors without
           dropping healthy rows. Account identity defaults to full emails;
           --identity redacted hides email local parts.
+          --all-accounts adds visible Codex profiles and configured token accounts
+          under each provider; top-level fields continue to describe its selected account.
           Stdout contains only the JSON document; diagnostics are written to stderr.
           --timeout accepts 0...86400 seconds and defaults to 30; 0 disables the deadline.
           --output atomically writes the snapshot to a file (0644) instead of stdout;
@@ -211,7 +213,7 @@ extension CodexBarCLI {
           codexbar serve [--host <host>] [--port <port>] [--refresh-interval <seconds>]
                          [--request-timeout <seconds>]
                          [--dashboard-token <token>] [--allow-plain-http]
-                         [--identity <redacted|full>]
+                         [--identity <redacted|full>] [--all-accounts]
                          [--json-output] [--log-level <trace|verbose|debug|info|warning|error|critical>]
                          [-v|--verbose]
 
@@ -231,6 +233,8 @@ extension CodexBarCLI {
           beyond a trusted network segment.
           Snapshot identity defaults to full account emails. --identity redacted hides
           email local parts and is recommended whenever responses cross a network.
+          --all-accounts includes visible Codex profiles and configured token accounts
+          in dashboard snapshots only. /usage keeps its existing Codex enumeration.
 
         Endpoints:
           GET /                    Built-in web dashboard

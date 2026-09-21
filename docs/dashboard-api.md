@@ -59,6 +59,32 @@ The UI does not change the transport threat model: `codexbar serve` is plain HTT
   `staleAfterSeconds` keeps the schema's 180-second minimum.
 - Both transports include the fill preference in host metadata; one-shot snapshots resolve it when collected.
 
+## Optional local multi-account snapshots
+
+Use `codexbar dashboard --all-accounts` or start `codexbar serve --all-accounts` to include visible Codex
+accounts/profile homes and configured token accounts in `providers[].accounts[]`. The option is off by default;
+existing claude-swap enrichment remains available without it and retains precedence for Claude account rows.
+Providers without configured accounts keep their ambient source rather than reporting a missing-account error.
+
+Each provider appears once. Its top-level identity, usage windows, credits and error describe the selected account,
+even when that account is not first in discovery order. Account entries carry their own active flag, identity,
+windows, timestamp and error. A failed/expired sibling does not replace healthy usage or become the provider error;
+a failed selected account is not silently replaced by a healthy sibling. Provider-level cost collection is unchanged
+and is not repeated or apportioned across account entries. More accounts can take longer; the existing request or
+command deadline still applies.
+
+Public account IDs use persisted token-account UUIDs or a SHA-256 projection of durable Codex source metadata
+(managed UUID, normalized profile-home path, or live workspace ID). They never export internal cache keys, email
+addresses, raw filesystem paths or credential fingerprints. IDs survive credential refresh and email/label changes;
+managed IDs also survive promotion to the live source. Moving a profile home changes its ID. An unmanaged live
+source without a workspace ID uses a stable system-scope ID, not an individual-person ID. IDs are opaque correlation
+handles, not an authentication or anonymity guarantee. `--identity redacted` also redacts email-shaped text in
+expanded account labels and errors. Existing per-request privacy and usage-bar preferences remain in effect for serve.
+
+The all-account scope is isolated in both response-cache keys and shared provider-operation fingerprints.
+`/usage` retains its existing Codex enumeration, `/cost` is unchanged, and no remote-client configuration or
+credential-store behavior is added. This is a server/CLI projection of accounts already configured locally.
+
 ## Configuring the token
 
 ```bash

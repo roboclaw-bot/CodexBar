@@ -10,6 +10,9 @@ import Commander
 import Foundation
 
 struct DashboardOptions: CommanderParsable {
+    @Flag(name: .long("all-accounts"), help: "Include all local accounts in dashboard snapshots")
+    var allAccounts: Bool = false
+
     @Flag(names: [.short("v"), .long("verbose")], help: "Enable verbose logging")
     var verbose: Bool = false
 
@@ -60,6 +63,7 @@ struct DashboardSnapshotProducer: Sendable {
     var collectClaudeSwapAccounts: @Sendable (CodexBarConfig) async -> DashboardClaudeSwapCollection? = { _ in nil }
     var weeklyWorkDays: @Sendable () -> Int? = { nil }
     var usageBarsShowUsed: @Sendable () -> Bool = { false }
+    var allAccounts: Bool = false
 
     func collect(
         config: CodexBarConfig,
@@ -97,10 +101,12 @@ struct DashboardSnapshotProducer: Sendable {
                     adapterError: $0.adapterError,
                     weeklyWorkDays: self.weeklyWorkDays())
             },
-            usageBarsShowUsed: self.usageBarsShowUsed())
+            usageBarsShowUsed: self.usageBarsShowUsed(),
+            allAccounts: self.allAccounts)
         return DashboardSnapshotResult(
             payload: payload,
-            usageCacheKeys: usageOutput.payload.map(\.cacheAccountKey))
+            usageCacheKeys: DashboardSnapshotBuilder.selectedPayloads(
+                usageOutput.payload, allAccounts: self.allAccounts).map(\.cacheAccountKey))
     }
 
     static func live(context: DashboardSnapshotContext) -> Self {
@@ -166,7 +172,8 @@ struct DashboardSnapshotProducer: Sendable {
                 }
             },
             weeklyWorkDays: { CodexBarCLI.weeklyProgressWorkDaysFromDefaults() },
-            usageBarsShowUsed: { CodexBarCLI.usageBarsShowUsedFromDefaults() })
+            usageBarsShowUsed: { CodexBarCLI.usageBarsShowUsedFromDefaults() },
+            allAccounts: context.usage.includeAllAccounts)
     }
 }
 
@@ -228,7 +235,8 @@ extension CodexBarCLI {
                     startedAt: startedAt,
                     requestTimeout: timeout),
                 providerOperations: providerOperations,
-                includeAllCodexAccounts: false,
+                includeAllCodexAccounts: values.flags.contains("allAccounts"),
+                includeAllAccounts: values.flags.contains("allAccounts"),
                 persistCLISessions: false),
             costCollection: ServeCostCollectionContext(
                 configFingerprint: configSnapshot.cacheToken,
