@@ -910,8 +910,8 @@ extension CLIServeWebUI {
           const windows = node("div", "windows");
           for (const window of visibleWindows(account.windows)) windows.append(renderWindow(window));
           card.append(windows);
-          // Codex compatibility fields belong to this selected account. Do not apply
-          // ambient-provider credits to independently discovered claude-swap accounts.
+          // Provider-specific by design: Codex binds compatibility credits to its selected account.
+          // Do not apply ambient credits to independently discovered claude-swap accounts.
           if (provider.id === "codex" && selected) {
             const metrics = node("div", "metrics");
             appendCredits(metrics, provider.credits);
