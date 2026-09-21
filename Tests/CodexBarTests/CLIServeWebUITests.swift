@@ -323,18 +323,20 @@ struct CLIServeWebUITests {
     }
 
     @Test
-    func `web ui renders account cards in titled groups for multi account providers`() {
-        let html = self.html
-        // Multi-account providers render one card per account inside a titled
-        // vertical group; account labels retain the producer's disambiguation.
-        #expect(html.contains("function renderAccountCard(provider, account)"))
-        #expect(html.contains("provider.accountsError"))
-        #expect(html.contains("group-title"))
+    func `web ui renders account cards in titled groups for multi account providers`() throws {
+        let context = try self.recordingContext()
+        context.evaluateScript("renderSnapshot(fixture);")
+        #expect(context.exception == nil)
+        let text = try #require(context.evaluateScript("recordedText(elements.providers)")?.toArray() as? [String])
+        #expect(text.contains("Claude accounts"))
+        #expect(text.contains("Synthetic adapter note"))
+        #expect(context.evaluateScript(
+            "recordedNodes(elements.providers).filter(node => node.tagName === 'article').length")?.toInt32() == 3)
     }
 
     @Test
     func `account cards preserve projected labels before falling back to email`() throws {
-        let start = try #require(self.html.range(of: "function renderAccountCard(provider, account)"))
+        let start = try #require(self.html.range(of: "function renderAccountCard("))
         let end = try #require(self.html.range(of: "function renderProvider(provider)"))
         let renderer = String(self.html[start.lowerBound..<end.lowerBound])
         let context = try #require(JSContext())
