@@ -1,0 +1,69 @@
+name: Verify PR 3832 on macOS
+run-name: macOS verification of PR 3832 at 6dad914fc
+
+on:
+  push:
+    branches: [verify/codexbar-3832-6dad914fc]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-pr-3832-macos
+  cancel-in-progress: false
+
+env:
+  CODEXBAR_TEST_CODEX_FILE_ISOLATION: "1"
+  CODEXBAR_TEST_SESSION_FILE_ISOLATION: "1"
+  CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS: "1"
+
+jobs:
+  macos:
+    runs-on: macos-26
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard-index: [0, 1]
+    steps:
+      - name: Check out the exact PR source, not the verification workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: roboclaw-bot/CodexBar
+          ref: 6dad914fca02465d160a47e327ba2a901c1c6ba4
+          persist-credentials: false
+
+      - name: Verify source provenance and select the repository CI toolchain
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 6dad914fca02465d160a47e327ba2a901c1c6ba4
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          echo "DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer" >> "$GITHUB_ENV"
+          [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.6* ]]
+          /usr/bin/xcodebuild -version
+          swift --version
+          swift package --version
+          printf 'Source commit: `%s`\n\nIndependent fork verification; not an upstream CI approval.\n' \
+            "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Full repository checks on macOS
+        if: ${{ matrix.shard-index == 0 }}
+        run: make check
+
+      - name: Full macOS test suite, repository-standard sharding
+        id: tests
+        if: ${{ !cancelled() && steps.source.outcome == 'success' }}
+        timeout-minutes: 50
+        env:
+          CODEXBAR_TEST_GROUP_SIZE: "8"
+          CODEXBAR_TEST_SUITE_TIMEOUT: "120"
+          CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES: "0"
+          CODEXBAR_TEST_SHARD_INDEX: ${{ matrix.shard-index }}
+          CODEXBAR_TEST_SHARD_COUNT: "2"
+        run: make test
+
+      - name: Provider plugin engine A/B goldens
+        if: ${{ !cancelled() && matrix.shard-index == 0 && steps.tests.outcome == 'success' }}
+        run: ./Scripts/test-plugin-engines.sh
