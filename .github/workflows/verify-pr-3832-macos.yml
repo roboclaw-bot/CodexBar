@@ -1,5 +1,5 @@
 name: Verify PR 3832 on macOS
-run-name: macOS verification of PR 3832 at 0601278c0
+run-name: macOS verification of PR 3832 at 564a71ec1
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: roboclaw-bot/CodexBar
-          ref: 0601278c0bce1a31800e0d45120865f0926a6f5e
+          ref: 564a71ec169fec1e15a0968ed1d23afc5cad743c
           persist-credentials: false
 
       - name: Verify source provenance and select the repository CI toolchain
@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 0601278c0bce1a31800e0d45120865f0926a6f5e
+          test "$(git rev-parse HEAD)" = 564a71ec169fec1e15a0968ed1d23afc5cad743c
           sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
           echo "DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer" >> "$GITHUB_ENV"
           [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.6* ]]
