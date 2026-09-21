@@ -49,7 +49,7 @@ struct DashboardMultiAccountTests {
         #expect(accounts[0].windows.isEmpty)
         #expect(accounts[0].error == "Expired redacted@example.test")
         #expect(accounts[1].windows.first?.usedPercent == 65)
-        let json = try String(decoding: JSONEncoder().encode(snapshot), as: UTF8.self)
+        let json = try #require(String(data: JSONEncoder().encode(snapshot), encoding: .utf8))
         #expect(!json.contains("one@example.test"))
         #expect(!json.contains("two@example.test"))
         #expect(!json.contains("private:"))
@@ -79,13 +79,17 @@ struct DashboardMultiAccountTests {
         let snapshot = self.snapshot([payload], allAccounts: false)
         #expect(snapshot.providers.count == 1)
         #expect(snapshot.providers.first?.accounts == nil)
-        let json = try String(decoding: JSONEncoder().encode(payload), as: UTF8.self)
+        let json = try #require(String(data: JSONEncoder().encode(payload), encoding: .utf8))
         #expect(!json.contains("dashboardAccount"))
         #expect(!json.contains("cacheAccountKey"))
         #expect(!json.contains("private:"))
         let context = ServeUsageContext(
-            config: self.config, configFingerprint: "fixture", refreshInterval: 60,
-            providerTimeout: nil, providerDeadline: nil, providerOperations: CLIServeOperationCoordinator())
+            config: self.config,
+            configFingerprint: "fixture",
+            refreshInterval: 60,
+            providerTimeout: nil,
+            providerDeadline: nil,
+            providerOperations: CLIServeOperationCoordinator())
         #expect(context.includeAllCodexAccounts)
         #expect(!context.includeAllAccounts)
     }
@@ -112,14 +116,19 @@ struct DashboardMultiAccountTests {
     func `configured accounts select non first active and missing accounts use ambient fallback`() throws {
         let accounts = [self.token(), self.token()]
         let config = CodexBarConfig(providers: [ProviderConfig(
-            id: .claude, enabled: true,
+            id: .claude,
+            enabled: true,
             tokenAccounts: ProviderTokenAccountData(version: 1, accounts: accounts, activeIndex: 1))])
         let selected = try TokenAccountCLIContext(
             selection: TokenAccountCLISelection(label: nil, index: nil, allAccounts: false),
-            config: config, verbose: false, baseEnvironment: [:])
+            config: config,
+            verbose: false,
+            baseEnvironment: [:])
         let all = try TokenAccountCLIContext(
             selection: TokenAccountCLISelection(label: nil, index: nil, allAccounts: true),
-            config: config, verbose: false, baseEnvironment: [:])
+            config: config,
+            verbose: false,
+            baseEnvironment: [:])
         #expect(try selected.resolvedAccounts(for: .claude, sourceMode: .web).map(\.id) == [accounts[1].id])
         #expect(try all.resolvedAccounts(for: .claude, sourceMode: .web).map(\.id) == accounts.map(\.id))
         #expect(CodexBarCLI.serveIncludesConfiguredAccounts(provider: .claude, config: config, allAccounts: true))
@@ -161,12 +170,20 @@ struct DashboardMultiAccountTests {
         let adapter = ClaudeSwapAccountProjection.accountSnapshots(from: ClaudeSwapAccountList(
             activeAccountNumber: 7,
             accounts: [ClaudeSwapAccountRow(
-                number: 7, email: "swap@example.test", isActive: true,
-                usageStatus: .ok, fiveHour: nil, sevenDay: nil)]))
+                number: 7,
+                email: "swap@example.test",
+                isActive: true,
+                usageStatus: .ok,
+                fiveHour: nil,
+                sevenDay: nil)]))
         let snapshot = DashboardSnapshotBuilder.makeSnapshot(
-            usagePayloads: [self.payload(provider: .claude, id: "token", active: true)], costPayloads: [],
-            config: self.config, identityMode: .full, generatedAt: Date(timeIntervalSince1970: 0),
-            refreshInterval: 60, codexBarVersion: nil,
+            usagePayloads: [self.payload(provider: .claude, id: "token", active: true)],
+            costPayloads: [],
+            config: self.config,
+            identityMode: .full,
+            generatedAt: Date(timeIntervalSince1970: 0),
+            refreshInterval: 60,
+            codexBarVersion: nil,
             claudeSwap: DashboardClaudeSwapInput(accounts: adapter, adapterError: nil, weeklyWorkDays: nil),
             allAccounts: allAccounts)
         let account = try #require(snapshot.providers.first?.accounts?.first)
@@ -179,9 +196,15 @@ struct DashboardMultiAccountTests {
         let storedID = UUID()
         func account(source: CodexActiveSource, storedID: UUID?) -> CodexVisibleAccount {
             CodexVisibleAccount(
-                id: "private", email: "fixture@example.test", workspaceAccountID: "workspace",
-                storedAccountID: storedID, selectionSource: source, isActive: true, isLive: source == .liveSystem,
-                canReauthenticate: true, canRemove: true)
+                id: "private",
+                email: "fixture@example.test",
+                workspaceAccountID: "workspace",
+                storedAccountID: storedID,
+                selectionSource: source,
+                isActive: true,
+                isLive: source == .liveSystem,
+                canReauthenticate: true,
+                canRemove: true)
         }
         let managed = account(source: .managedAccount(id: storedID), storedID: storedID)
         let live = account(source: .liveSystem, storedID: storedID)
@@ -197,29 +220,49 @@ struct DashboardMultiAccountTests {
     }
 
     private func snapshot(
-        _ payloads: [ProviderPayload], mode: DashboardIdentityMode = .full,
+        _ payloads: [ProviderPayload],
+        mode: DashboardIdentityMode = .full,
         allAccounts: Bool = true) -> DashboardSnapshotPayload
     {
         DashboardSnapshotBuilder.makeSnapshot(
-            usagePayloads: payloads, costPayloads: [], config: self.config, identityMode: mode,
-            generatedAt: Date(timeIntervalSince1970: 0), refreshInterval: 60, codexBarVersion: nil,
+            usagePayloads: payloads,
+            costPayloads: [],
+            config: self.config,
+            identityMode: mode,
+            generatedAt: Date(timeIntervalSince1970: 0),
+            refreshInterval: 60,
+            codexBarVersion: nil,
             allAccounts: allAccounts)
     }
 
     private func payload(
-        provider: UsageProvider = .codex, id: String, active: Bool,
-        used: Double = 0, error: String? = nil) -> ProviderPayload
+        provider: UsageProvider = .codex,
+        id: String,
+        active: Bool,
+        used: Double = 0,
+        error: String? = nil) -> ProviderPayload
     {
         let email = "\(id)@example.test"
         var payload = ProviderPayload(
-            provider: provider, account: email, cacheAccountKey: "private:\(email)", version: nil,
-            source: "fixture", status: nil,
+            provider: provider,
+            account: email,
+            cacheAccountKey: "private:\(email)",
+            version: nil,
+            source: "fixture",
+            status: nil,
             usage: error == nil ? UsageSnapshot(
                 primary: RateWindow(usedPercent: used, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
-                secondary: nil, tertiary: nil, updatedAt: Date(timeIntervalSince1970: 0),
+                secondary: nil,
+                tertiary: nil,
+                updatedAt: Date(timeIntervalSince1970: 0),
                 identity: ProviderIdentitySnapshot(
-                    providerID: provider, accountEmail: email, accountOrganization: nil, loginMethod: "pro")) : nil,
-            credits: nil, antigravityPlanInfo: nil, openaiDashboard: nil,
+                    providerID: provider.instanceID,
+                    accountEmail: email,
+                    accountOrganization: nil,
+                    loginMethod: "pro")) : nil,
+            credits: nil,
+            antigravityPlanInfo: nil,
+            openaiDashboard: nil,
             error: error.map { ProviderErrorPayload(code: 1, message: $0, kind: .provider) })
         payload.dashboardAccount = DashboardUsageAccount(id: id, label: email, active: active)
         return payload
@@ -227,10 +270,16 @@ struct DashboardMultiAccountTests {
 
     private func profile(path: String, email: String, fingerprint: String) -> CodexVisibleAccount {
         CodexVisibleAccount(
-            id: "private-\(email)", email: email, workspaceAccountID: "same-workspace",
-            authFingerprint: String(repeating: fingerprint, count: 64), storedAccountID: nil,
-            selectionSource: .profileHome(path: path), isActive: false, isLive: false,
-            canReauthenticate: false, canRemove: false)
+            id: "private-\(email)",
+            email: email,
+            workspaceAccountID: "same-workspace",
+            authFingerprint: String(repeating: fingerprint, count: 64),
+            storedAccountID: nil,
+            selectionSource: .profileHome(path: path),
+            isActive: false,
+            isLive: false,
+            canReauthenticate: false,
+            canRemove: false)
     }
 
     private func token(

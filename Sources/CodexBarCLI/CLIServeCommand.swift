@@ -1372,7 +1372,7 @@ extension CodexBarCLI {
         provider: UsageProvider, config: CodexBarConfig, allAccounts: Bool) -> Bool
     {
         allAccounts && TokenAccountSupportCatalog.support(for: provider) != nil
-            && config.providerConfig(for: provider)?.tokenAccounts?.accounts.isEmpty == false
+            && config.providerConfig(for: provider.instanceID)?.tokenAccounts?.accounts.isEmpty == false
     }
 
     static func serveUsageOperationFingerprint(
