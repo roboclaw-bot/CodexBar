@@ -267,27 +267,28 @@ extension CodexBarCLI {
         provider: UsageProvider,
         status: ProviderStatusPayload?,
         tokenContext: TokenAccountCLIContext,
-        command: UsageCommandContext) async -> UsageCommandOutput
+        command: UsageCommandContext,
+        publishPartial: CLIServeOperationCoordinator<UsageCommandOutput>
+            .PublishPartial? = nil) async -> UsageCommandOutput
     {
         // Provider-specific by design: Codex can enumerate reconciled live, managed, and profile-home accounts.
         if provider == .codex, command.includeAllCodexAccounts {
-            var output = UsageCommandOutput()
             let accounts = tokenContext.visibleCodexAccounts().visibleAccounts
             let selections: [CodexVisibleAccount?] = accounts.isEmpty ? [nil] : accounts.map { Optional($0) }
-            for visibleAccount in selections {
-                var result = await Self.fetchUsageOutput(
+            return await Self.collectAccountUsage(
+                provider: provider,
+                // Provider-specific by design: Codex profiles use durable source IDs, not token-account UUIDs.
+                accounts: selections.map { $0.map(DashboardUsageAccount.codex) },
+                publishPartial: publishPartial)
+            { index in
+                await Self.fetchUsageOutput(
                     provider: provider,
                     account: nil,
-                    codexVisibleAccount: visibleAccount,
+                    codexVisibleAccount: selections[index],
                     status: status,
                     tokenContext: tokenContext,
                     command: command)
-                if let visibleAccount {
-                    result.attachDashboardAccount(.codex(visibleAccount))
-                }
-                output.merge(result)
             }
-            return output
         }
 
         let accounts: [ProviderTokenAccount]
@@ -304,31 +305,23 @@ extension CodexBarCLI {
         }
 
         let selections = Self.accountSelections(from: accounts)
-        var output = UsageCommandOutput()
-        let accountRefreshDelay = TokenAccountSupportCatalog
-            .support(for: provider)?.minimumDelayBetweenAccountRefreshes
-        for (index, account) in selections.enumerated() {
-            if index > 0, let accountRefreshDelay {
-                do {
-                    try await Task.sleep(for: accountRefreshDelay)
-                } catch {
-                    return output
-                }
-            }
-            var result = await Self.fetchUsageOutput(
+        let data = tokenContext.accountsByProvider[provider]
+        let activeID = data.flatMap { $0.accounts.isEmpty ? nil : $0.accounts[$0.clampedActiveIndex()].id }
+        return await Self.collectAccountUsage(
+            provider: provider,
+            accounts: selections.map { account in
+                account.map { .token($0, active: $0.id == activeID) }
+            },
+            minimumDelay: TokenAccountSupportCatalog.support(for: provider)?.minimumDelayBetweenAccountRefreshes,
+            publishPartial: publishPartial)
+        { index in
+            await Self.fetchUsageOutput(
                 provider: provider,
-                account: account,
+                account: selections[index],
                 status: status,
                 tokenContext: tokenContext,
                 command: command)
-            if let account {
-                let data = tokenContext.accountsByProvider[provider]
-                let activeID = data.flatMap { $0.accounts.isEmpty ? nil : $0.accounts[$0.clampedActiveIndex()].id }
-                result.attachDashboardAccount(.token(account, active: account.id == activeID))
-            }
-            output.merge(result)
         }
-        return output
     }
 
     private static func accountSelections(from accounts: [ProviderTokenAccount]) -> [ProviderTokenAccount?] {

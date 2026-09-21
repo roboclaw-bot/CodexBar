@@ -215,6 +215,104 @@ struct DashboardMultiAccountTests {
         #expect(DashboardUsageAccount.codex(unmanaged).id != DashboardUsageAccount.codex(live).id)
     }
 
+    @Test(arguments: [false, true])
+    func `account collector preserves finished siblings at deadline for every joined waiter`(
+        expanded: Bool) async throws
+    {
+        let timer = DashboardAccountTestGate()
+        let slowStarted = DashboardAccountTestGate()
+        let slowRelease = DashboardAccountTestGate()
+        let now = ContinuousClock().now
+        let operations = CLIServeOperationCoordinator<UsageCommandOutput>(
+            now: { now },
+            sleepUntil: { _ in await timer.wait() })
+        let first = self.payload(id: "one", active: false, used: 10)
+        let second = self.payload(id: "two", active: true, used: 65)
+        let accounts = [first.dashboardAccount, second.dashboardAccount]
+        let deadline = now.advanced(by: .seconds(30))
+        let leader = Task {
+            await CodexBarCLI.serveCollectUsageOutputs(
+                providers: [.codex],
+                configFingerprint: "fixture",
+                deadline: deadline,
+                operations: operations)
+            { provider, publish in
+                await CodexBarCLI.collectAccountUsage(
+                    provider: provider,
+                    accounts: accounts,
+                    publishPartial: expanded ? publish : nil)
+                { index in
+                    if index == 1 {
+                        await slowStarted.open()
+                        // Deliberately ignores cancellation, like an in-flight provider transport.
+                        await slowRelease.wait()
+                    }
+                    return UsageCommandOutput(payload: [index == 0 ? first : second])
+                }
+            }
+        }
+        await slowStarted.wait()
+        let follower = Task {
+            await CodexBarCLI.serveCollectUsageOutputs(
+                providers: [.codex],
+                configFingerprint: "fixture",
+                deadline: deadline,
+                operations: operations)
+            { _ in
+                Issue.record("A joined request must not start another account fetch")
+                return UsageCommandOutput()
+            }
+        }
+        for _ in 0..<10000 {
+            if await operations.snapshot().waiterCount == 2 { break }
+            await Task.yield()
+        }
+        #expect(await operations.snapshot().waiterCount == 2)
+        await timer.open()
+        let outputs = await [leader.value, follower.value]
+        #expect(await operations.snapshot().operationCount == 1)
+        let changedConfig = await CodexBarCLI.serveCollectUsageOutputs(
+            providers: [.codex],
+            configFingerprint: "different-account-configuration",
+            deadline: deadline.advanced(by: .seconds(30)),
+            operations: operations)
+        { _ in
+            Issue.record("A new configuration must not overlap the retained source")
+            return UsageCommandOutput()
+        }
+        #expect(changedConfig.payload.count == 1)
+        #expect(changedConfig.payload.first?.dashboardAccount == nil)
+        #expect(changedConfig.payload.first?.usage == nil)
+        // Drain owned source work before assertions that can throw.
+        await slowRelease.open()
+        for _ in 0..<10000 {
+            if await operations.snapshot().operationCount == 0 { break }
+            await Task.yield()
+        }
+        #expect(await operations.snapshot().operationCount == 0)
+        for output in outputs {
+            if expanded {
+                #expect(output.payload.count == 2)
+                #expect(output.payload.first?.usage?.primary?.usedPercent == 10)
+                #expect(output.payload.first?.cacheAccountKey == "private:one@example.test")
+                #expect(output.payload.last?.dashboardAccount?.id == "two")
+                #expect(output.payload.last?.error != nil)
+                #expect(output.payload.last?.cacheAccountKey == nil)
+                let snapshot = self.snapshot(output.payload, mode: .redacted)
+                let row = try #require(snapshot.providers.first)
+                #expect(row.accounts?.count == 2)
+                #expect(row.accounts?.first?.windows.first?.usedPercent == 10)
+                #expect(row.accounts?.last?.active == true)
+                #expect(row.error != nil)
+            } else {
+                #expect(output.payload.count == 1)
+                #expect(output.payload.first?.usage == nil)
+                #expect(output.payload.first?.dashboardAccount == nil)
+                #expect(output.payload.first?.error != nil)
+            }
+        }
+    }
+
     private var config: CodexBarConfig {
         CodexBarConfig(providers: [ProviderConfig(id: .codex, enabled: true)])
     }
@@ -288,5 +386,24 @@ struct DashboardMultiAccountTests {
         token: String = "synthetic") -> ProviderTokenAccount
     {
         ProviderTokenAccount(id: id, label: label, token: token, addedAt: 0, lastUsed: nil)
+    }
+}
+
+private actor DashboardAccountTestGate {
+    private var isOpen = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func wait() async {
+        guard !self.isOpen else { return }
+        await withCheckedContinuation { self.waiters.append($0) }
+    }
+
+    func open() {
+        self.isOpen = true
+        let waiters = self.waiters
+        self.waiters.removeAll()
+        for waiter in waiters {
+            waiter.resume()
+        }
     }
 }

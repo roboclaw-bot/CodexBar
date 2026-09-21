@@ -1355,7 +1355,7 @@ extension CodexBarCLI {
                 includeAllAccounts: context.includeAllAccounts),
             deadline: context.providerDeadline,
             operations: context.providerOperations)
-        { provider in
+        { provider, publish in
             await ProviderInteractionContext.$current.withValue(.background) {
                 await Self.fetchUsageOutputs(
                     provider: provider,
@@ -1363,7 +1363,8 @@ extension CodexBarCLI {
                     tokenContext: Self.serveIncludesConfiguredAccounts(
                         provider: provider, config: context.config, allAccounts: context.includeAllAccounts)
                         ? allTokenContext : tokenContext,
-                    command: command)
+                    command: command,
+                    publishPartial: context.includeAllAccounts ? publish : nil)
             }
         }
     }
@@ -1430,8 +1431,9 @@ extension CodexBarCLI {
     /// row instead of blocking the others, so the overall response still renders
     /// every healthy provider. (Per-account error rows that carry a
     /// cache key are merged with last-known-good by `CLIServeResponseCache`; a
-    /// timeout row is account-agnostic and is not reconstructed, matching the
-    /// existing "a timeout cannot prove the active account" cache rule.) Each
+    /// default timeout row is account-agnostic and is not reconstructed. Expanded
+    /// dashboards can publish completed siblings plus account-local timeout rows;
+    /// unfinished accounts carry no cache key, so stale usage is never reassigned.) Each
     /// deadline is absolute from HTTP request entry. The operation coordinator
     /// retains timed-out sources until they really exit, preventing a later route
     /// from stacking work for that provider. Results are merged in caller order.
@@ -1458,6 +1460,24 @@ extension CodexBarCLI {
         operations: CLIServeOperationCoordinator<UsageCommandOutput>,
         fetch: @Sendable @escaping (UsageProvider) async -> UsageCommandOutput) async -> UsageCommandOutput
     {
+        await self.serveCollectUsageOutputs(
+            providers: providers,
+            configFingerprint: configFingerprint,
+            deadline: deadline,
+            operations: operations,
+            fetch: { provider, _ in await fetch(provider) })
+    }
+
+    static func serveCollectUsageOutputs(
+        providers: [UsageProvider],
+        configFingerprint: String,
+        deadline: ContinuousClock.Instant?,
+        operations: CLIServeOperationCoordinator<UsageCommandOutput>,
+        fetch: @Sendable @escaping (
+            UsageProvider,
+            @escaping CLIServeOperationCoordinator<UsageCommandOutput>.PublishPartial) async -> UsageCommandOutput)
+        async -> UsageCommandOutput
+    {
         let indexed = await withTaskGroup(of: (Int, UsageCommandOutput).self) { group in
             for (index, provider) in providers.enumerated() {
                 group.addTask {
@@ -1466,10 +1486,10 @@ extension CodexBarCLI {
                         for: provider.rawValue,
                         fingerprint: configFingerprint,
                         deadline: deadline,
-                        timeoutValue: timeout)
-                    {
-                        await fetch(provider)
-                    }
+                        timeoutValue: timeout,
+                        operationWithProgress: { publish in
+                            await fetch(provider, publish)
+                        })
                     return (index, output)
                 }
             }

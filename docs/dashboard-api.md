@@ -69,7 +69,7 @@ Providers without configured accounts keep their ambient source rather than repo
 Each provider appears once. Its top-level identity, usage windows, credits and error describe the selected account,
 even when that account is not first in discovery order. Account entries carry their own active flag, identity,
 windows, timestamp and error. A failed/expired sibling does not replace healthy usage or become the provider error;
-a failed selected account is not silently replaced by a healthy sibling. Provider-level cost collection is unchanged
+a failed selected account is not silently replaced by a healthy sibling. Completed account results also survive a sibling exceeding the provider deadline; unfinished accounts retain their identity metadata and receive account-local timeout errors. The web dashboard displays the selected Codex account's credits on that account card, never as a shared balance. Provider-level cost collection is unchanged
 and is not repeated or apportioned across account entries. More accounts can take longer; the existing request or
 command deadline still applies.
 

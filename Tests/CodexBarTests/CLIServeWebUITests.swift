@@ -128,6 +128,32 @@ struct CLIServeWebUITests {
             "recordedNodes(elements.providers).filter(x => x.tagName === 'svg').length")?.toInt32() == 1)
     }
 
+    @Test(arguments: [false, true], [0, 9876])
+    func `expanded Codex credits stay on the selected account only`(
+        activeSecond: Bool, remaining: Int) throws
+    {
+        let context = try self.recordingContext()
+        context.evaluateScript("""
+        fixture.providers[0].id = "codex";
+        fixture.providers[0].name = "Codex";
+        fixture.providers[0].credits.remaining = \(remaining);
+        fixture.providers[0].accounts[0].active = false;
+        fixture.providers[0].accounts[1].active = \(activeSecond);
+        renderSnapshot(fixture);
+        const cards = recordedNodes(elements.providers).filter(n => n.tagName === 'article');
+        """)
+        #expect(context.exception == nil)
+        let selected = activeSecond ? 1 : 0
+        let balance = try #require(context.evaluateScript("amount(\(remaining)) + ' credits'")?.toString())
+        for index in 0..<2 {
+            let text = try #require(context.evaluateScript("recordedText(cards[\(index)])")?.toArray() as? [String])
+            #expect(text.contains("Remaining") == (index == selected))
+            #expect(text.contains(balance) == (index == selected))
+        }
+        let allText = try #require(context.evaluateScript("recordedText(elements.providers)")?.toArray() as? [String])
+        #expect(allText.filter { $0 == balance }.count == 1)
+    }
+
     @Test
     func `account group omits an empty shared cost card`() throws {
         let context = try self.recordingContext()
