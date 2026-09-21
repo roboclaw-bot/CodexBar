@@ -1,5 +1,5 @@
 name: Verify PR 3832 on macOS
-run-name: macOS verification of PR 3832 at 564a71ec1
+run-name: macOS verification of PR 3832 at 123bb7b27
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: roboclaw-bot/CodexBar
-          ref: 564a71ec169fec1e15a0968ed1d23afc5cad743c
+          ref: 123bb7b27d3a998ffeafca0e4dcc89f76e963f36
           persist-credentials: false
 
       - name: Verify source provenance and select the repository CI toolchain
@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 564a71ec169fec1e15a0968ed1d23afc5cad743c
+          test "$(git rev-parse HEAD)" = 123bb7b27d3a998ffeafca0e4dcc89f76e963f36
           sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
           echo "DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer" >> "$GITHUB_ENV"
           [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.6* ]]
@@ -49,7 +49,8 @@ jobs:
             "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Restore SwiftPM build cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: swiftcache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .build
@@ -62,13 +63,18 @@ jobs:
         if: ${{ matrix.shard-index == 0 }}
         run: make check
 
+      - name: Build and discover all test targets
+        id: build
+        if: ${{ !cancelled() && steps.source.outcome == 'success' }}
+        run: swift test list > "$RUNNER_TEMP/discovered-tests.txt"
+
       - name: Focused account, deadline, rendering, and architecture regressions
-        if: ${{ matrix.shard-index == 0 }}
-        run: swift test --filter 'DashboardMultiAccountTests|CLIServeTimeoutTests|CLIServeWebUITests|ProviderArchitectureGatekeeperTests'
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.shard-index == 0 }}
+        run: swift test --skip-build --no-parallel --filter 'DashboardMultiAccountTests|CLIServeTimeoutTests|CLIServeWebUITests|ProviderArchitectureGatekeeperTests'
 
       - name: Full macOS test suite, repository-standard sharding
         id: tests
-        if: ${{ !cancelled() && steps.source.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         timeout-minutes: 50
         env:
           CODEXBAR_TEST_GROUP_SIZE: "8"
@@ -81,3 +87,12 @@ jobs:
       - name: Provider plugin engine A/B goldens
         if: ${{ !cancelled() && matrix.shard-index == 0 && steps.tests.outcome == 'success' }}
         run: ./Scripts/test-plugin-engines.sh
+
+      - name: Save successfully built targets even if a test reports a failure
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.swiftcache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+          key: verify-macos26-${{ hashFiles('Package.resolved', 'Package.swift') }}-${{ matrix.shard-index }}
