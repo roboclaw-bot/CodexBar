@@ -96,6 +96,12 @@ remains available. A successful empty adapter result likewise does not fall back
 The all-account scope is isolated in both response-cache keys and shared provider-operation fingerprints.
 `/usage` retains its existing Codex enumeration, `/cost` is unchanged, and no remote-client configuration or
 credential-store behavior is added. This is a server projection of accounts already configured locally.
+Expanded snapshots also report a generic `accountsError: "Account list incomplete"` when the managed Codex
+account store is unreadable or a configured token account is missing from the collected rows. Any available
+accounts remain visible. An account with an error or timeout still counts as collected; it keeps its own
+account-local error instead of being mistaken for an undiscovered account. This warning never includes
+account names, paths, or raw discovery diagnostics, even with `--identity full`. Claude adapter results
+remain authoritative, including successful empty lists. Ordinary snapshots and `/usage` are unchanged.
 
 ## Configuring the token
 

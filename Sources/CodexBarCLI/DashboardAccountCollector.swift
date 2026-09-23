@@ -14,6 +14,7 @@ extension CodexBarCLI {
     static func collectAccountUsage(
         provider: UsageProvider,
         accounts: [DashboardUsageAccount?],
+        inventoryIncomplete: Bool = false,
         minimumDelay: Duration? = nil,
         publishPartial: CLIServeOperationCoordinator<UsageCommandOutput>.PublishPartial? = nil,
         fetch: @Sendable (Int) async -> UsageCommandOutput) async -> UsageCommandOutput
@@ -24,7 +25,7 @@ extension CodexBarCLI {
             if publishPartial != nil {
                 for account in accounts[index...] {
                     var timeout = Self.serveProviderTimeoutOutput(provider: provider)
-                    if let account { timeout.attachDashboardAccount(account) }
+                    timeout.attachDashboardAccount(account, inventoryIncomplete: inventoryIncomplete)
                     fallback.merge(timeout)
                 }
             }
@@ -40,7 +41,7 @@ extension CodexBarCLI {
                 }
             }
             var result = await fetch(index)
-            if let account = accounts[index] { result.attachDashboardAccount(account) }
+            result.attachDashboardAccount(accounts[index], inventoryIncomplete: inventoryIncomplete)
             output.merge(result)
         }
         return output

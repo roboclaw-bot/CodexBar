@@ -7,6 +7,7 @@ struct ProviderPayload: Encodable {
     let cacheAccountKey: String?
     /// Transport-private metadata; never encoded in the usage contract.
     var dashboardAccount: DashboardUsageAccount?
+    var dashboardAccountsIncomplete = false
     let version: String?
     let source: String
     let status: ProviderStatusPayload?

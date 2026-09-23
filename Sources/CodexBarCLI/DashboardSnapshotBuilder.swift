@@ -55,6 +55,8 @@ enum DashboardSnapshotBuilder {
                 identityMode: identityMode,
                 generatedAt: generatedAt,
                 claudeSwap: rowClaudeSwap,
+                accountCollectionIncomplete: allAccounts && self.accountCollectionIncomplete(
+                    provider: payload.provider, payloads: grouped[payload.provider] ?? [], config: config),
                 accountPayloads: allAccounts ? grouped[payload.provider] : nil)
         }
 
@@ -122,6 +124,7 @@ enum DashboardSnapshotBuilder {
         identityMode: DashboardIdentityMode,
         generatedAt: Date,
         claudeSwap: DashboardClaudeSwapInput?,
+        accountCollectionIncomplete: Bool,
         accountPayloads: [ProviderPayload]?) -> DashboardProviderPayload
     {
         let provider = UsageProvider(rawValue: payload.provider)
@@ -150,6 +153,14 @@ enum DashboardSnapshotBuilder {
                     privateLabel: accountPayloads != nil && identityMode != .full ? "Account \(index + 1)" : nil)
             }
             : nil
+        let accountsError: String? = if let claudeSwap {
+            claudeSwap.adapterError.map {
+                accountPayloads != nil && identityMode != .full ? "Account list unavailable" : $0
+            }
+        } else {
+            // Inventory state is intentionally generic in every identity mode.
+            accountCollectionIncomplete ? "Account list incomplete" : nil
+        }
         return DashboardProviderPayload(
             id: presentation.id,
             name: presentation.name,
@@ -171,9 +182,19 @@ enum DashboardSnapshotBuilder {
                 generatedAt: generatedAt),
             // Keep the explicit Claude adapter authoritative when configured.
             accounts: claudeSwap != nil ? accounts : (collectedAccounts?.isEmpty == false ? collectedAccounts : nil),
-            accountsError: claudeSwap?.adapterError.map {
-                accountPayloads != nil && identityMode != .full ? "Account list unavailable" : $0
-            })
+            accountsError: accountsError)
+    }
+
+    private static func accountCollectionIncomplete(
+        provider: String, payloads: [ProviderPayload], config: CodexBarConfig) -> Bool
+    {
+        if payloads.contains(where: \.dashboardAccountsIncomplete) { return true }
+        guard let provider = UsageProvider(rawValue: provider),
+              TokenAccountSupportCatalog.support(for: provider) != nil,
+              let accounts = config.providerConfig(for: provider.instanceID)?.tokenAccounts?.accounts
+        else { return false }
+        let collectedIDs = Set(payloads.compactMap { $0.dashboardAccount?.id })
+        return accounts.contains { !collectedIDs.contains(DashboardUsageAccount.token($0, active: false).id) }
     }
 
     /// Keep provider ordering, but use the selected account rather than discovery order.

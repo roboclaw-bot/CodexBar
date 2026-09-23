@@ -32,9 +32,11 @@ struct DashboardUsageAccount: Sendable {
 }
 
 extension UsageCommandOutput {
-    mutating func attachDashboardAccount(_ account: DashboardUsageAccount) {
+    mutating func attachDashboardAccount(_ account: DashboardUsageAccount?, inventoryIncomplete: Bool = false) {
         for index in self.payload.indices {
-            self.payload[index].dashboardAccount = account
+            if let account { self.payload[index].dashboardAccount = account }
+            self.payload[index].dashboardAccountsIncomplete = self.payload[index].dashboardAccountsIncomplete
+                || inventoryIncomplete
         }
     }
 }

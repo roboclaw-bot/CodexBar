@@ -273,12 +273,14 @@ extension CodexBarCLI {
     {
         // Provider-specific by design: Codex can enumerate reconciled live, managed, and profile-home accounts.
         if provider == .codex, command.includeAllCodexAccounts {
-            let accounts = tokenContext.visibleCodexAccounts().visibleAccounts
+            let projection = tokenContext.visibleCodexAccounts()
+            let accounts = projection.visibleAccounts
             let selections: [CodexVisibleAccount?] = accounts.isEmpty ? [nil] : accounts.map { Optional($0) }
             return await Self.collectAccountUsage(
                 provider: provider,
                 // Provider-specific by design: Codex profiles use durable source IDs, not token-account UUIDs.
                 accounts: selections.map { $0.map(DashboardUsageAccount.codex) },
+                inventoryIncomplete: projection.hasUnreadableAddedAccountStore,
                 publishPartial: publishPartial)
             { index in
                 await Self.fetchUsageOutput(
