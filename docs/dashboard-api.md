@@ -92,6 +92,9 @@ The usage-bar preference remains in effect.
 When the Claude adapter is configured, its account result is authoritative: a whole-adapter failure emits
 `accountsError` and omits `accounts`, never substituting configured token accounts. Independent top-level usage
 remains available. A successful empty adapter result likewise does not fall back to another source.
+The adapter also takes precedence during collection: ordinary selected-account collection supplies the Claude
+provider-level data, without querying non-selected configured Claude token accounts whose results would be discarded.
+Other providers still expand normally; disabling the adapter restores all configured Claude accounts in expanded mode.
 
 The all-account scope is isolated in both response-cache keys and shared provider-operation fingerprints.
 `/usage` retains its existing Codex enumeration, `/cost` is unchanged, and no remote-client configuration or

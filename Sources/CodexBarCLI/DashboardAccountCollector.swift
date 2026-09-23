@@ -2,10 +2,26 @@ import CodexBarCore
 import Foundation
 
 extension CodexBarCLI {
+    typealias ServeUsageFetcher = @Sendable (
+        UsageProvider, TokenAccountCLIContext, UsageCommandContext,
+        CLIServeOperationCoordinator<UsageCommandOutput>.PublishPartial?) async -> UsageCommandOutput
+
+    static let fetchServeProviderUsage: ServeUsageFetcher = { provider, tokenContext, command, publish in
+        await Self.fetchUsageOutputs(
+            provider: provider,
+            status: nil,
+            tokenContext: tokenContext,
+            command: command,
+            publishPartial: publish)
+    }
+
     static func serveIncludesConfiguredAccounts(
         provider: UsageProvider, config: CodexBarConfig, allAccounts: Bool) -> Bool
     {
-        allAccounts && TokenAccountSupportCatalog.support(for: provider) != nil
+        guard allAccounts else { return false }
+        // Provider-specific by design: Claude-swap supplies account rows; keep normal provider-level usage only.
+        if provider == .claude, dashboardClaudeSwapIsEligible(config: config) { return false }
+        return TokenAccountSupportCatalog.support(for: provider) != nil
             && config.providerConfig(for: provider.instanceID)?.tokenAccounts?.accounts.isEmpty == false
     }
 

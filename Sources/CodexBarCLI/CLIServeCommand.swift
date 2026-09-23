@@ -1316,7 +1316,9 @@ extension CodexBarCLI {
 
     static func serveUsageOutput(
         selection: ProviderSelection,
-        context: ServeUsageContext) async throws -> UsageCommandOutput
+        context: ServeUsageContext,
+        fetchUsage: @escaping ServeUsageFetcher = CodexBarCLI
+            .fetchServeProviderUsage) async throws -> UsageCommandOutput
     {
         let tokenContext = try TokenAccountCLIContext(
             selection: TokenAccountCLISelection(label: nil, index: nil, allAccounts: false),
@@ -1359,14 +1361,13 @@ extension CodexBarCLI {
             operations: context.providerOperations)
         { provider, publish in
             await ProviderInteractionContext.$current.withValue(.background) {
-                await Self.fetchUsageOutputs(
-                    provider: provider,
-                    status: nil,
-                    tokenContext: Self.serveIncludesConfiguredAccounts(
+                await fetchUsage(
+                    provider,
+                    Self.serveIncludesConfiguredAccounts(
                         provider: provider, config: context.config, allAccounts: context.includeAllAccounts)
                         ? allTokenContext : tokenContext,
-                    command: command,
-                    publishPartial: context.includeAllAccounts ? publish : nil)
+                    command,
+                    context.includeAllAccounts ? publish : nil)
             }
         }
     }
