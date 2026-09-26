@@ -1,0 +1,98 @@
+name: Verify current-main account integration on macOS
+run-name: macOS integration verification at 15520cc68
+
+on:
+  push:
+    branches: [verify/codexbar-integration-15520cc68]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-integration-15520cc68
+  cancel-in-progress: false
+
+env:
+  CODEXBAR_TEST_CODEX_FILE_ISOLATION: "1"
+  CODEXBAR_TEST_SESSION_FILE_ISOLATION: "1"
+  CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS: "1"
+
+jobs:
+  macos:
+    runs-on: macos-26
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard-index: [0, 1]
+    steps:
+      - name: Check out the exact PR source, not the verification workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: roboclaw-bot/CodexBar
+          ref: 15520cc68a5ff70d52dcf2bd6c1afa1261d51310
+          persist-credentials: false
+
+      - name: Verify source provenance and select the repository CI toolchain
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 15520cc68a5ff70d52dcf2bd6c1afa1261d51310
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          echo "DEVELOPER_DIR=/Applications/Xcode_26.6.app/Contents/Developer" >> "$GITHUB_ENV"
+          [[ "$(/usr/bin/xcodebuild -version)" == Xcode\ 26.6* ]]
+          /usr/bin/xcodebuild -version
+          swift --version
+          swift package --version
+          printf 'Source commit: `%s`\n\nIndependent fork verification; not an upstream CI approval.\n' \
+            "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Restore SwiftPM build cache
+        id: swiftcache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+          key: verify-macos26-${{ hashFiles('Package.resolved', 'Package.swift') }}-${{ matrix.shard-index }}
+          restore-keys: |
+            verify-macos26-${{ hashFiles('Package.resolved', 'Package.swift') }}-
+
+      - name: Full repository checks on macOS
+        if: ${{ matrix.shard-index == 0 }}
+        run: make check
+
+      - name: Build and discover all test targets
+        id: build
+        if: ${{ !cancelled() && steps.source.outcome == 'success' }}
+        run: swift test list > "$RUNNER_TEMP/discovered-tests.txt"
+
+      - name: Focused account, deadline, rendering, and architecture regressions
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.shard-index == 0 }}
+        run: swift test --skip-build --no-parallel --filter 'DashboardClaudeSwapCollectionTests|DashboardAccountInventoryTests|DashboardAccountPrivacyTests|DashboardMultiAccountTests|CLIServe|Dashboard|ProviderArchitectureGatekeeperTests'
+
+      - name: Full macOS test suite, repository-standard sharding
+        id: tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        timeout-minutes: 50
+        env:
+          CODEXBAR_TEST_GROUP_SIZE: "8"
+          CODEXBAR_TEST_SUITE_TIMEOUT: "120"
+          CODEXBAR_TEST_RETRY_NON_TIMEOUT_FAILURES: "0"
+          CODEXBAR_TEST_SHARD_INDEX: ${{ matrix.shard-index }}
+          CODEXBAR_TEST_SHARD_COUNT: "2"
+        run: make test
+
+      - name: Provider plugin engine A/B goldens
+        if: ${{ !cancelled() && matrix.shard-index == 0 && steps.tests.outcome == 'success' }}
+        run: ./Scripts/test-plugin-engines.sh
+
+      - name: Save successfully built targets even if a test reports a failure
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.swiftcache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+          key: verify-macos26-${{ hashFiles('Package.resolved', 'Package.swift') }}-${{ matrix.shard-index }}
