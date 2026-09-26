@@ -1,0 +1,76 @@
+{
+  "host": {
+    "codexBarVersion": null,
+    "refreshIntervalSeconds": 60,
+    "usageBarsShowUsed": false
+  },
+  "providers": [
+    {
+      "id": "codex",
+      "display": {
+        "priority": "normal",
+        "sortKey": 0,
+        "accentColor": "#49A3B0"
+      },
+      "accounts": [
+        {
+          "active": false,
+          "windows": [
+            {
+              "usedPercent": 20,
+              "remainingPercent": 80,
+              "resetAt": "2026-09-26T14:56:15Z",
+              "kind": "session",
+              "label": "Session"
+            }
+          ],
+          "pace": {
+            "primary": {
+              "willLastToReset": true,
+              "summary": "60% in reserve | Expected 80% used | Lasts until reset | 1.5× headroom",
+              "expectedUsedPercent": 80,
+              "stage": "farBehind",
+              "deltaPercent": -60
+            }
+          },
+          "identity": null,
+          "updatedAt": "2026-09-26T13:56:15Z",
+          "id": "codex:6a865c1dad481c2b8deb3073d247354b8c02718b301405e6a25863708f714a90",
+          "label": "Account 1",
+          "error": null
+        },
+        {
+          "active": true,
+          "windows": [],
+          "pace": null,
+          "identity": null,
+          "updatedAt": null,
+          "id": "codex:ef92027c189410062a1f712fb86b691498e6fa463d235d1d7f29982d7289a15d",
+          "label": "Account 2",
+          "error": "Account usage unavailable"
+        }
+      ],
+      "enabled": true,
+      "updatedAt": "2026-09-26T13:56:17Z",
+      "source": "auto",
+      "error": {
+        "message": "Account usage unavailable",
+        "kind": "provider",
+        "code": 1
+      },
+      "cost": {
+        "todayUSD": null,
+        "last30DaysUSD": 0
+      },
+      "credits": null,
+      "status": null,
+      "windows": [],
+      "name": "Codex",
+      "accountsError": "Account list incomplete",
+      "identity": null
+    }
+  ],
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-26T13:56:17Z",
+  "staleAfterSeconds": 180
+}

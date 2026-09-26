@@ -1,0 +1,118 @@
+[
+  {
+    "usage": {
+      "primary": {
+        "usedPercent": 20,
+        "resetDescription": "2:56 PM",
+        "windowMinutes": 300,
+        "resetsAt": "2026-09-26T14:56:14Z"
+      },
+      "tertiary": null,
+      "updatedAt": "2026-09-26T13:56:14Z",
+      "dataConfidence": "exact",
+      "accountEmail": "fixture1@example.test",
+      "providerCost": {
+        "currencyCode": "Credits",
+        "updatedAt": "2026-09-26T13:56:14Z",
+        "period": "Extra usage",
+        "balanceUpdatedAt": "2026-09-26T13:56:14Z",
+        "used": 0,
+        "balance": 17.25,
+        "limit": 0
+      },
+      "codexResetCredits": {
+        "credits": [],
+        "availableCount": 0,
+        "updatedAt": "2026-09-26T13:56:14Z"
+      },
+      "loginMethod": "plus",
+      "secondary": null,
+      "identity": {
+        "accountEmail": "fixture1@example.test",
+        "providerID": "codex",
+        "loginMethod": "plus"
+      }
+    },
+    "provider": "codex",
+    "pace": {
+      "primary": {
+        "stage": "farBehind",
+        "deltaPercent": -60,
+        "expectedUsedPercent": 80,
+        "willLastToReset": true,
+        "summary": "60% in reserve | Expected 80% used | Lasts until reset | 1.5× headroom"
+      }
+    },
+    "rateWindowLabels": {
+      "primary": "Session"
+    },
+    "source": "oauth",
+    "credits": {
+      "events": [],
+      "updatedAt": "2026-09-26T13:56:14Z",
+      "creditsAvailable": true,
+      "balanceReadSucceeded": true,
+      "remaining": 17.25,
+      "balanceIsWorkspace": false
+    },
+    "account": "fixture1@example.test"
+  },
+  {
+    "usage": {
+      "primary": {
+        "resetsAt": "2026-09-26T14:56:14Z",
+        "resetDescription": "2:56 PM",
+        "windowMinutes": 300,
+        "usedPercent": 65
+      },
+      "tertiary": null,
+      "updatedAt": "2026-09-26T13:56:14Z",
+      "dataConfidence": "exact",
+      "accountEmail": "fixture2@example.test",
+      "providerCost": {
+        "currencyCode": "Credits",
+        "updatedAt": "2026-09-26T13:56:14Z",
+        "period": "Extra usage",
+        "balanceUpdatedAt": "2026-09-26T13:56:14Z",
+        "used": 0,
+        "balance": 42.5,
+        "limit": 0
+      },
+      "codexResetCredits": {
+        "availableCount": 0,
+        "credits": [],
+        "updatedAt": "2026-09-26T13:56:14Z"
+      },
+      "loginMethod": "plus",
+      "secondary": null,
+      "identity": {
+        "providerID": "codex",
+        "accountEmail": "fixture2@example.test",
+        "loginMethod": "plus"
+      }
+    },
+    "provider": "codex",
+    "pace": {
+      "primary": {
+        "summary": "15% in reserve | Expected 80% used | Lasts until reset | 1.5× headroom",
+        "stage": "farBehind",
+        "deltaPercent": -15,
+        "expectedUsedPercent": 80,
+        "willLastToReset": true
+      }
+    },
+    "rateWindowLabels": {
+      "primary": "Session"
+    },
+    "source": "oauth",
+    "credits": {
+      "events": [],
+      "updatedAt": "2026-09-26T13:56:14Z",
+      "creditsAvailable": true,
+      "balanceReadSucceeded": true,
+      "remaining": 42.5,
+      "balanceIsWorkspace": false
+    },
+    "account": "fixture2@example.test"
+  }
+]

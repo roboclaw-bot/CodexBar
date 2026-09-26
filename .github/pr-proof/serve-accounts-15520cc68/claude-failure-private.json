@@ -1,0 +1,38 @@
+{
+  "staleAfterSeconds": 180,
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-26T13:56:24Z",
+  "host": {
+    "codexBarVersion": null,
+    "refreshIntervalSeconds": 60,
+    "usageBarsShowUsed": false
+  },
+  "providers": [
+    {
+      "source": "web",
+      "enabled": true,
+      "name": "Claude",
+      "id": "claude",
+      "windows": [],
+      "updatedAt": "2026-09-26T13:56:24Z",
+      "display": {
+        "priority": "normal",
+        "sortKey": 10,
+        "accentColor": "#CC7C5E"
+      },
+      "identity": null,
+      "cost": {
+        "last30DaysUSD": 0,
+        "todayUSD": null
+      },
+      "accountsError": "Account list unavailable",
+      "credits": null,
+      "status": null,
+      "error": {
+        "code": 1,
+        "message": "Account usage unavailable",
+        "kind": "runtime"
+      }
+    }
+  ]
+}

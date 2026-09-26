@@ -1,0 +1,99 @@
+{
+  "generatedAt": "2026-09-26T13:56:14Z",
+  "host": {
+    "codexBarVersion": null,
+    "refreshIntervalSeconds": 60,
+    "usageBarsShowUsed": false
+  },
+  "providers": [
+    {
+      "enabled": true,
+      "identity": null,
+      "accounts": [
+        {
+          "updatedAt": "2026-09-26T13:56:14Z",
+          "label": "Account 1",
+          "active": false,
+          "id": "codex:6a865c1dad481c2b8deb3073d247354b8c02718b301405e6a25863708f714a90",
+          "windows": [
+            {
+              "label": "Session",
+              "kind": "session",
+              "usedPercent": 20,
+              "remainingPercent": 80,
+              "resetAt": "2026-09-26T14:56:14Z"
+            }
+          ],
+          "pace": {
+            "primary": {
+              "summary": "60% in reserve | Expected 80% used | Lasts until reset | 1.5× headroom",
+              "stage": "farBehind",
+              "deltaPercent": -60,
+              "expectedUsedPercent": 80,
+              "willLastToReset": true
+            }
+          },
+          "identity": null,
+          "error": null
+        },
+        {
+          "updatedAt": "2026-09-26T13:56:14Z",
+          "label": "Account 2",
+          "active": true,
+          "id": "codex:ef92027c189410062a1f712fb86b691498e6fa463d235d1d7f29982d7289a15d",
+          "windows": [
+            {
+              "label": "Session",
+              "kind": "session",
+              "usedPercent": 65,
+              "remainingPercent": 35,
+              "resetAt": "2026-09-26T14:56:14Z"
+            }
+          ],
+          "pace": {
+            "primary": {
+              "willLastToReset": true,
+              "summary": "15% in reserve | Expected 80% used | Lasts until reset | 1.5× headroom",
+              "expectedUsedPercent": 80,
+              "deltaPercent": -15,
+              "stage": "farBehind"
+            }
+          },
+          "identity": null,
+          "error": null
+        }
+      ],
+      "id": "codex",
+      "accountsError": "Account list incomplete",
+      "credits": {
+        "remaining": 42.5,
+        "unit": "credits"
+      },
+      "name": "Codex",
+      "error": null,
+      "cost": {
+        "todayUSD": null,
+        "last30DaysUSD": 0
+      },
+      "windows": [
+        {
+          "usedPercent": 65,
+          "kind": "session",
+          "label": "Session",
+          "remainingPercent": 35,
+          "resetAt": "2026-09-26T14:56:14Z"
+        }
+      ],
+      "source": "oauth",
+      "updatedAt": "2026-09-26T13:56:14Z",
+      "display": {
+        "sortKey": 0,
+        "priority": "normal",
+        "accentColor": "#49A3B0"
+      },
+      "status": null
+    }
+  ],
+  "schemaVersion": 1,
+  "staleAfterSeconds": 180
+}

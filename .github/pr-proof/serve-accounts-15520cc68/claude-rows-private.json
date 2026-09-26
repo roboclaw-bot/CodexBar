@@ -1,0 +1,67 @@
+{
+  "generatedAt": "2026-09-26T13:56:23Z",
+  "schemaVersion": 1,
+  "staleAfterSeconds": 180,
+  "providers": [
+    {
+      "status": null,
+      "updatedAt": "2026-09-26T13:56:23Z",
+      "credits": null,
+      "name": "Claude",
+      "source": "web",
+      "windows": [],
+      "error": {
+        "kind": "runtime",
+        "message": "Account usage unavailable",
+        "code": 1
+      },
+      "identity": null,
+      "accounts": [
+        {
+          "windows": [
+            {
+              "remainingPercent": 80,
+              "kind": "session",
+              "label": "Session",
+              "usedPercent": 20,
+              "resetAt": null
+            }
+          ],
+          "label": "Account 1",
+          "identity": null,
+          "active": true,
+          "pace": null,
+          "id": "claude-swap:1",
+          "updatedAt": "2026-09-26T13:56:23Z",
+          "error": null
+        },
+        {
+          "windows": [],
+          "label": "Account 2",
+          "identity": null,
+          "active": false,
+          "pace": null,
+          "id": "claude-swap:2",
+          "updatedAt": null,
+          "error": "Account usage unavailable"
+        }
+      ],
+      "cost": {
+        "last30DaysUSD": 0,
+        "todayUSD": null
+      },
+      "display": {
+        "priority": "normal",
+        "accentColor": "#CC7C5E",
+        "sortKey": 10
+      },
+      "enabled": true,
+      "id": "claude"
+    }
+  ],
+  "host": {
+    "refreshIntervalSeconds": 60,
+    "codexBarVersion": null,
+    "usageBarsShowUsed": false
+  }
+}

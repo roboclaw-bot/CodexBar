@@ -1,0 +1,38 @@
+{
+  "host": {
+    "usageBarsShowUsed": false,
+    "refreshIntervalSeconds": 60,
+    "codexBarVersion": null
+  },
+  "generatedAt": "2026-09-26T13:56:26Z",
+  "schemaVersion": 1,
+  "staleAfterSeconds": 180,
+  "providers": [
+    {
+      "credits": null,
+      "accounts": [],
+      "source": "web",
+      "name": "Claude",
+      "id": "claude",
+      "display": {
+        "accentColor": "#CC7C5E",
+        "sortKey": 10,
+        "priority": "normal"
+      },
+      "updatedAt": "2026-09-26T13:56:26Z",
+      "enabled": true,
+      "cost": {
+        "last30DaysUSD": 0,
+        "todayUSD": null
+      },
+      "error": {
+        "kind": "runtime",
+        "message": "Error: selected source requires web support and is only supported on macOS.",
+        "code": 1
+      },
+      "status": null,
+      "windows": [],
+      "identity": null
+    }
+  ]
+}

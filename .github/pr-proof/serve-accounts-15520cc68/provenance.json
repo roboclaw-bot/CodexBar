@@ -1,0 +1,205 @@
+{
+  "source": "15520cc68a5ff70d52dcf2bd6c1afa1261d51310",
+  "tree": "61ae71c2f1acb35ec81f538aa580652eee12d27c",
+  "integratedMain": "b59aee6ff2d26cd2c5632ce4f9d91e5fc4a1ef78",
+  "binarySHA256": "12d0fcfa29b60c47c976a2372900b3bc128554b5928cd733adbd57e586cb29d2",
+  "swift": "6.3.3",
+  "isolation": "Disposable network-none Linux container; synthetic profile homes/mock HTTP and synthetic Claude adapter subprocess; no host credentials or Keychain access",
+  "codexScenarios": [
+    {
+      "scenario": "healthy",
+      "status": "passed",
+      "accounts": 2,
+      "accountsError": null,
+      "unauthorized": 401
+    },
+    {
+      "scenario": "private",
+      "status": "passed",
+      "accounts": 2,
+      "accountsError": "Account list incomplete",
+      "unauthorized": 401
+    },
+    {
+      "scenario": "full",
+      "status": "passed",
+      "accounts": 2,
+      "accountsError": "Account list incomplete",
+      "unauthorized": 401
+    },
+    {
+      "scenario": "redacted",
+      "status": "passed",
+      "accounts": 2,
+      "accountsError": "Account list incomplete",
+      "unauthorized": 401
+    },
+    {
+      "scenario": "selected",
+      "status": "passed",
+      "accounts": 0,
+      "accountsError": null,
+      "unauthorized": 401
+    },
+    {
+      "scenario": "timeout",
+      "status": "passed",
+      "accounts": 2,
+      "accountsError": "Account list incomplete",
+      "unauthorized": 401
+    }
+  ],
+  "claudeScenarios": [
+    {
+      "scenario": "rows-private",
+      "status": "passed",
+      "httpStatus": 200,
+      "unauthenticatedStatus": 401,
+      "cacheControl": "no-store"
+    },
+    {
+      "scenario": "rows-full",
+      "status": "passed",
+      "httpStatus": 200,
+      "unauthenticatedStatus": 401,
+      "cacheControl": "no-store"
+    },
+    {
+      "scenario": "rows-redacted",
+      "status": "passed",
+      "httpStatus": 200,
+      "unauthenticatedStatus": 401,
+      "cacheControl": "no-store"
+    },
+    {
+      "scenario": "failure-private",
+      "status": "passed",
+      "httpStatus": 200,
+      "unauthenticatedStatus": 401,
+      "cacheControl": "no-store"
+    },
+    {
+      "scenario": "failure-full",
+      "status": "passed",
+      "httpStatus": 200,
+      "unauthenticatedStatus": 401,
+      "cacheControl": "no-store"
+    },
+    {
+      "scenario": "failure-redacted",
+      "status": "passed",
+      "httpStatus": 200,
+      "unauthenticatedStatus": 401,
+      "cacheControl": "no-store"
+    },
+    {
+      "scenario": "empty-private",
+      "status": "passed",
+      "httpStatus": 200,
+      "unauthenticatedStatus": 401,
+      "cacheControl": "no-store"
+    },
+    {
+      "scenario": "empty-full",
+      "status": "passed",
+      "httpStatus": 200,
+      "unauthenticatedStatus": 401,
+      "cacheControl": "no-store"
+    },
+    {
+      "scenario": "empty-redacted",
+      "status": "passed",
+      "httpStatus": 200,
+      "unauthenticatedStatus": 401,
+      "cacheControl": "no-store"
+    }
+  ],
+  "responses": "Unmodified HTTP JSON bodies; auth-routes.json is an assertion receipt rather than a response body",
+  "files": [
+    {
+      "file": "auth-routes.json",
+      "bytes": 553,
+      "sha256": "1506ab3b489b79d0891cd0ddf8b7fd767f27aab0267625e25d619106c8729900"
+    },
+    {
+      "file": "claude-empty-full.json",
+      "bytes": 845,
+      "sha256": "f32599dabf1eff177e29766a7b9e44a3a0bb2b804c9c0d14d276ee409a6088c5"
+    },
+    {
+      "file": "claude-empty-private.json",
+      "bytes": 795,
+      "sha256": "a95ea675ed005e25f584314b542a450c2dbdbe640c67457e37540e7faf3ea49c"
+    },
+    {
+      "file": "claude-empty-redacted.json",
+      "bytes": 795,
+      "sha256": "37d0103b7e6979cc18f3bfc28ecff6e74c7927ed0a1e114e988c388a0c95a56e"
+    },
+    {
+      "file": "claude-failure-full.json",
+      "bytes": 931,
+      "sha256": "967efb6cdadf577c608426484dfa74b650f1ad05beb8c2549b4bd33c0dad42e8"
+    },
+    {
+      "file": "claude-failure-private.json",
+      "bytes": 824,
+      "sha256": "61c2a671492034c8f28232c76740efb9eed532c1bf0a6ba7a4690905265e30d6"
+    },
+    {
+      "file": "claude-failure-redacted.json",
+      "bytes": 824,
+      "sha256": "14edf5a040afa1ac1b6c6e397ec845646630080573b57b052261e10e04020079"
+    },
+    {
+      "file": "claude-rows-full.json",
+      "bytes": 1827,
+      "sha256": "0eb871471af3cb779138f7b13feae65dff5e18e8538e36656370c10030bc8c79"
+    },
+    {
+      "file": "claude-rows-private.json",
+      "bytes": 1534,
+      "sha256": "45cdbc40b270f611862d0b7bd3f06f259145a05a3739fadf26005e0d6ec33499"
+    },
+    {
+      "file": "claude-rows-redacted.json",
+      "bytes": 1708,
+      "sha256": "826a8081c19f2c19a5751d04278a92299380663cb230f6259e36016b2536dee8"
+    },
+    {
+      "file": "codex-full.json",
+      "bytes": 2963,
+      "sha256": "31c663278107d4393ede4dddf3e995a715ebe1f0760f1ecd2106e150c12855a2"
+    },
+    {
+      "file": "codex-healthy.json",
+      "bytes": 2634,
+      "sha256": "80ceb22cec7961ff9ada491d69511077088f4799c9f2833938e8937a08527732"
+    },
+    {
+      "file": "codex-private.json",
+      "bytes": 2684,
+      "sha256": "8876b7bf41c95b8e8ef0a91464f4cf129149b49182fe427250bdbe178ffcf59d"
+    },
+    {
+      "file": "codex-redacted.json",
+      "bytes": 2939,
+      "sha256": "ab487490e43338b7c3e05046dc4b1863aa3dd10d9e925726a84c7c5573fc28f8"
+    },
+    {
+      "file": "codex-selected.json",
+      "bytes": 1002,
+      "sha256": "385a392d364e9dd55ee205ba5b51f0ef15f45db6969f4102f2e34069cd9fd3b0"
+    },
+    {
+      "file": "codex-timeout.json",
+      "bytes": 2013,
+      "sha256": "c4d58294fe516ed10e7564e51fd636dd0078be3dc1ba0a3f0ed3ef5d64b38d64"
+    },
+    {
+      "file": "codex-usage.json",
+      "bytes": 3130,
+      "sha256": "927acc36be2923083eb4c02e92f90900eba85778e7bf6d2677f0a2fe7db5f534"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "path": "/usage?provider=invalid-fixture",
+    "missingToken": 401,
+    "wrongToken": 401,
+    "authorizedInvalidProvider": 400
+  },
+  {
+    "path": "/cost?provider=invalid-fixture",
+    "missingToken": 401,
+    "wrongToken": 401,
+    "authorizedInvalidProvider": 400
+  },
+  {
+    "path": "/dashboard/v1/snapshot?provider=invalid-fixture",
+    "missingToken": 401,
+    "wrongToken": 401,
+    "authorizedInvalidProvider": 400
+  },
+  {
+    "path": "/",
+    "unauthenticated": 200
+  },
+  {
+    "path": "/health",
+    "unauthenticated": 200
+  }
+]

@@ -1,0 +1,108 @@
+{
+  "generatedAt": "2026-09-26T13:56:14Z",
+  "host": {
+    "codexBarVersion": null,
+    "usageBarsShowUsed": false,
+    "refreshIntervalSeconds": 60
+  },
+  "providers": [
+    {
+      "enabled": true,
+      "error": null,
+      "updatedAt": "2026-09-26T13:56:14Z",
+      "windows": [
+        {
+          "remainingPercent": 35,
+          "kind": "session",
+          "label": "Session",
+          "usedPercent": 65,
+          "resetAt": "2026-09-26T14:56:14Z"
+        }
+      ],
+      "name": "Codex",
+      "accounts": [
+        {
+          "error": null,
+          "identity": {
+            "plan": "Plus",
+            "accountEmail": "fixture1@example.test"
+          },
+          "id": "codex:6a865c1dad481c2b8deb3073d247354b8c02718b301405e6a25863708f714a90",
+          "active": false,
+          "pace": {
+            "primary": {
+              "summary": "60% in reserve | Expected 80% used | Lasts until reset | 1.5× headroom",
+              "deltaPercent": -60,
+              "expectedUsedPercent": 80,
+              "stage": "farBehind",
+              "willLastToReset": true
+            }
+          },
+          "label": "fixture1@example.test",
+          "windows": [
+            {
+              "remainingPercent": 80,
+              "usedPercent": 20,
+              "kind": "session",
+              "label": "Session",
+              "resetAt": "2026-09-26T14:56:14Z"
+            }
+          ],
+          "updatedAt": "2026-09-26T13:56:14Z"
+        },
+        {
+          "error": null,
+          "identity": {
+            "plan": "Plus",
+            "accountEmail": "fixture2@example.test"
+          },
+          "id": "codex:ef92027c189410062a1f712fb86b691498e6fa463d235d1d7f29982d7289a15d",
+          "active": true,
+          "pace": {
+            "primary": {
+              "expectedUsedPercent": 80,
+              "willLastToReset": true,
+              "summary": "15% in reserve | Expected 80% used | Lasts until reset | 1.5× headroom",
+              "stage": "farBehind",
+              "deltaPercent": -15
+            }
+          },
+          "label": "fixture2@example.test",
+          "windows": [
+            {
+              "remainingPercent": 35,
+              "usedPercent": 65,
+              "kind": "session",
+              "label": "Session",
+              "resetAt": "2026-09-26T14:56:14Z"
+            }
+          ],
+          "updatedAt": "2026-09-26T13:56:14Z"
+        }
+      ],
+      "accountsError": "Account list incomplete",
+      "id": "codex",
+      "credits": {
+        "unit": "credits",
+        "remaining": 42.5
+      },
+      "source": "oauth",
+      "status": null,
+      "display": {
+        "priority": "normal",
+        "sortKey": 0,
+        "accentColor": "#49A3B0"
+      },
+      "identity": {
+        "plan": "Plus",
+        "accountEmail": "fixture2@example.test"
+      },
+      "cost": {
+        "last30DaysUSD": 0,
+        "todayUSD": null
+      }
+    }
+  ],
+  "staleAfterSeconds": 180,
+  "schemaVersion": 1
+}

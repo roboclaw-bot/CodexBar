@@ -1,0 +1,108 @@
+{
+  "providers": [
+    {
+      "windows": [
+        {
+          "label": "Session",
+          "kind": "session",
+          "usedPercent": 65,
+          "remainingPercent": 35,
+          "resetAt": "2026-09-26T14:56:15Z"
+        }
+      ],
+      "status": null,
+      "identity": {
+        "accountEmail": "redacted@example.test",
+        "plan": "Plus"
+      },
+      "accounts": [
+        {
+          "updatedAt": "2026-09-26T13:56:15Z",
+          "label": "Account 1",
+          "error": null,
+          "id": "codex:6a865c1dad481c2b8deb3073d247354b8c02718b301405e6a25863708f714a90",
+          "windows": [
+            {
+              "kind": "session",
+              "remainingPercent": 80,
+              "usedPercent": 20,
+              "resetAt": "2026-09-26T14:56:15Z",
+              "label": "Session"
+            }
+          ],
+          "active": false,
+          "identity": {
+            "accountEmail": "redacted@example.test",
+            "plan": "Plus"
+          },
+          "pace": {
+            "primary": {
+              "willLastToReset": true,
+              "stage": "farBehind",
+              "deltaPercent": -60,
+              "summary": "60% in reserve | Expected 80% used | Lasts until reset | 1.5× headroom",
+              "expectedUsedPercent": 80
+            }
+          }
+        },
+        {
+          "updatedAt": "2026-09-26T13:56:15Z",
+          "label": "Account 2",
+          "error": null,
+          "id": "codex:ef92027c189410062a1f712fb86b691498e6fa463d235d1d7f29982d7289a15d",
+          "windows": [
+            {
+              "kind": "session",
+              "remainingPercent": 35,
+              "usedPercent": 65,
+              "resetAt": "2026-09-26T14:56:15Z",
+              "label": "Session"
+            }
+          ],
+          "active": true,
+          "identity": {
+            "accountEmail": "redacted@example.test",
+            "plan": "Plus"
+          },
+          "pace": {
+            "primary": {
+              "summary": "15% in reserve | Expected 80% used | Lasts until reset | 1.5× headroom",
+              "expectedUsedPercent": 80,
+              "stage": "farBehind",
+              "willLastToReset": true,
+              "deltaPercent": -15
+            }
+          }
+        }
+      ],
+      "error": null,
+      "enabled": true,
+      "id": "codex",
+      "accountsError": "Account list incomplete",
+      "cost": {
+        "last30DaysUSD": 0,
+        "todayUSD": null
+      },
+      "display": {
+        "sortKey": 0,
+        "accentColor": "#49A3B0",
+        "priority": "normal"
+      },
+      "credits": {
+        "remaining": 42.5,
+        "unit": "credits"
+      },
+      "name": "Codex",
+      "source": "oauth",
+      "updatedAt": "2026-09-26T13:56:15Z"
+    }
+  ],
+  "staleAfterSeconds": 180,
+  "host": {
+    "codexBarVersion": null,
+    "refreshIntervalSeconds": 60,
+    "usageBarsShowUsed": false
+  },
+  "generatedAt": "2026-09-26T13:56:15Z",
+  "schemaVersion": 1
+}

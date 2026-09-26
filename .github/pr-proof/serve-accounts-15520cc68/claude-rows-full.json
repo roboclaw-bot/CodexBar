@@ -1,0 +1,73 @@
+{
+  "generatedAt": "2026-09-26T13:56:24Z",
+  "host": {
+    "refreshIntervalSeconds": 60,
+    "usageBarsShowUsed": false,
+    "codexBarVersion": null
+  },
+  "schemaVersion": 1,
+  "providers": [
+    {
+      "accounts": [
+        {
+          "error": null,
+          "windows": [
+            {
+              "label": "Session",
+              "usedPercent": 20,
+              "remainingPercent": 80,
+              "kind": "session",
+              "resetAt": null
+            }
+          ],
+          "active": true,
+          "identity": {
+            "plan": null,
+            "accountEmail": "fixture1@example.test"
+          },
+          "pace": null,
+          "id": "claude-swap:1",
+          "updatedAt": "2026-09-26T13:56:24Z",
+          "label": "Private Team"
+        },
+        {
+          "error": "Unrecognized claude-swap status: private failure for Private Team fixture2@example.test",
+          "windows": [],
+          "active": false,
+          "identity": {
+            "plan": null,
+            "accountEmail": "fixture2@example.test"
+          },
+          "pace": null,
+          "id": "claude-swap:2",
+          "updatedAt": null,
+          "label": "Secret Client"
+        }
+      ],
+      "error": {
+        "code": 1,
+        "message": "Error: selected source requires web support and is only supported on macOS.",
+        "kind": "runtime"
+      },
+      "credits": null,
+      "source": "web",
+      "id": "claude",
+      "updatedAt": "2026-09-26T13:56:24Z",
+      "windows": [],
+      "status": null,
+      "identity": null,
+      "name": "Claude",
+      "display": {
+        "priority": "normal",
+        "sortKey": 10,
+        "accentColor": "#CC7C5E"
+      },
+      "cost": {
+        "todayUSD": null,
+        "last30DaysUSD": 0
+      },
+      "enabled": true
+    }
+  ],
+  "staleAfterSeconds": 180
+}
