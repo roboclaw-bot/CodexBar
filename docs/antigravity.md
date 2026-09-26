@@ -65,8 +65,9 @@ Antigravity supports four usage data sources:
 
 The app-local `language_server` exists only while Antigravity.app is running. With the app closed,
 CodexBar relies on the `agy` CLI HTTPS source or the Google OAuth fallback. Without a signed-in
-`agy`, the OAuth fallback can only prove model availability, so the menu shows an all-100%
-placeholder instead of real quota numbers. A freshly spawned `agy` needs a few seconds for macOS
+`agy`, the OAuth fallback may only prove model availability. Unverified all-100% model responses
+are not quota measurements: the menu shows `Limits not available` when quota access is denied.
+A freshly spawned `agy` needs a few seconds for macOS
 keyring authentication before its quota endpoints answer, so the first refresh after a cold start
 can take a few extra seconds while CodexBar waits for readiness; later refreshes reuse the warmed session.
 
@@ -92,6 +93,11 @@ empty quota card. Auto also skips `agy` reports without account identity when a 
 because it cannot verify that those quotas belong to that account. Settings explains this beside **Usage source**.
 To try the local app or `agy` account instead, select **Local API / agy CLI** (CLI: `--source cli`).
 That source may use a different signed-in account from the Google account selected in CodexBar; it does not verify a match.
+Saved Google accounts remain stored but inactive in this mode: they do not label local reports or trigger
+per-account refreshes. CLI account selectors (`--account`, `--account-index`, `--all-accounts`) require
+`--source auto` or `--source oauth`, not `--source cli`.
+An identified account mismatch in Auto fails promptly; an initializing server with no identity may still
+be polled within the readiness deadline.
 
 ## OAuth account switching
 
@@ -291,6 +297,11 @@ shared OAuth file can still be used as a fallback credential source.
   represent different cadences. Unknown or missing summary cadences remain unavailable; snapshots without summary
   rows retain the standard cadence fallback. Automatic selection, its exhausted-quota option, and explicit family
   metrics retain their existing selection policies.
+- To pin both weekly allowances, open **Settings → Display → Menu Bar → Layout**, select **Antigravity**,
+  and add **Gemini weekly %** and **Claude/GPT weekly %** from Usage. Add a **Line break** between them for
+  a stacked display. These choices appear when the corresponding known quota-summary windows are available;
+  a missing or unknown family allowance hides only its token, without substituting its session quota or the
+  other family's weekly quota. The existing **Weekly %** token still shows the most constrained family.
 - Antigravity reports every model family the plan covers, so an account that only uses Gemini still receives a
   Claude/GPT pair pinned at 0%. Menu cards and widgets hide a family once every lane in it reports known zero usage.
   A family with unknown usage stays visible, and every family remains visible when all are untouched, for example
@@ -353,6 +364,7 @@ the menu, Usage & Spend, exported JSON, and the CLI; they never establish empty 
 zero. Failed or retained-partial dashboard attempts do not acknowledge successful incorporation of a refresh trigger. Overflowed aggregate
 totals remain unknown rather than becoming saturated or wrapping.
 Hard database-count, row-count, cumulative-byte, or duration budget exhaustion does not publish a newly truncated report; it remains unavailable and preserves prior complete history.
+Schema-budget exhaustion preserves validated rows from earlier databases as partial history, subject to the same lower-bound labeling and prior-complete-report rules. The schema cap remains 64 KiB.
 
 The schema evidence is [Tokscale's pinned SQLite parser](https://github.com/junhoyeo/tokscale/blob/62ca1eb1677556972ba963fdfa3a41ab23c1eb4b/crates/tokscale-core/src/sessions/antigravity_cli.rs),
 whose header records six databases and 140 turns. SQLite usage fields 1 + 2 are input, 5 is cache read,

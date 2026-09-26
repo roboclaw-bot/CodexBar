@@ -69,6 +69,10 @@ check_release_checksum() {
   "${ROOT_DIR}/Scripts/test_release_checksum.sh"
 }
 
+check_release_assets() {
+  python3 "${ROOT_DIR}/Scripts/test_check_release_assets.py"
+}
+
 check_sparkle_signing_paths() {
   "${ROOT_DIR}/Scripts/test_sparkle_signing_paths.sh"
 }
@@ -115,6 +119,7 @@ check_app_locales() {
 }
 
 check_site_locales() {
+  node --test "${ROOT_DIR}/Scripts/test_social_card.mjs"
   node "${ROOT_DIR}/Scripts/check-site-locales.mjs"
   node --check "${ROOT_DIR}/docs/site.js"
 }
@@ -138,6 +143,7 @@ run_portable_checks() {
   check_packaged_app_launch
   check_release_dsym_paths
   check_release_checksum
+  check_release_assets
   check_sparkle_signing_paths
   check_swift_static_sdk_installer
   check_mimo_usage_script

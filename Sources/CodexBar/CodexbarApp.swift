@@ -46,7 +46,6 @@ struct CodexBarApp: App {
     @State private var managedCodexAccountCoordinator: ManagedCodexAccountCoordinator
     @State private var codexAccountPromotionCoordinator: CodexAccountPromotionCoordinator
     private let preferencesSelection: PreferencesSelection
-    private let account: AccountInfo
 
     init() {
         let env = ProcessInfo.processInfo.environment
@@ -98,7 +97,6 @@ struct CodexBarApp: App {
         _store = State(wrappedValue: store)
         _managedCodexAccountCoordinator = State(wrappedValue: managedCodexAccountCoordinator)
         _codexAccountPromotionCoordinator = State(wrappedValue: codexAccountPromotionCoordinator)
-        self.account = account
         CodexBarLog.setLogLevel(settings.debugLogLevel)
         self.appDelegate.configure(.init(
             store: store,
@@ -125,6 +123,13 @@ struct CodexBarApp: App {
                     self.appDelegate.openSettings(pane: nil)
                 }
                 .keyboardShortcut(",", modifiers: .command)
+            }
+            CommandGroup(replacing: .help) {
+                Button(L("CodexBar Help")) {
+                    guard let url = URL(string: "https://github.com/steipete/CodexBar/blob/main/README.md")
+                    else { return }
+                    NSWorkspace.shared.open(url)
+                }
             }
         }
     }
@@ -185,13 +190,6 @@ final class DisabledUpdaterController: UpdaterProviding {
         self.manualUpdateCommand = manualUpdateCommand
     }
 
-    static func homebrew() -> DisabledUpdaterController {
-        let command = ManualUpdateCommand.homebrew
-        return DisabledUpdaterController(
-            unavailableReason: L("Managed by Homebrew"),
-            manualUpdateCommand: command)
-    }
-
     func checkForUpdates(_ sender: Any?) {}
     func installUpdate() {}
 }
@@ -201,9 +199,14 @@ final class DisabledUpdaterController: UpdaterProviding {
 final class UpdateStatus {
     static let disabled = UpdateStatus()
     var isUpdateReady: Bool
+    /// A newer version that can be installed on demand, for updaters that do not stage downloads.
+    var availableVersion: String?
+    var isInstalling: Bool
 
-    init(isUpdateReady: Bool = false) {
+    init(isUpdateReady: Bool = false, availableVersion: String? = nil, isInstalling: Bool = false) {
         self.isUpdateReady = isUpdateReady
+        self.availableVersion = availableVersion
+        self.isInstalling = isInstalling
     }
 }
 
@@ -345,7 +348,8 @@ private func makeUpdaterController() -> UpdaterProviding {
     }
 
     if InstallOrigin.isHomebrewCask(appBundleURL: bundleURL) {
-        return DisabledUpdaterController.homebrew()
+        return HomebrewUpdaterController(
+            savedAutoCheck: (UserDefaults.standard.object(forKey: "autoUpdateEnabled") as? Bool) ?? true)
     }
 
     guard isDeveloperIDSigned(bundleURL: bundleURL) else {
@@ -429,6 +433,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        MenuBarStatusItemWindowProbe.trace("will-finish-launching")
         self.configureAppIconForMacOSVersion()
         // The SwiftUI `Settings` scene is an empty placeholder; macOS otherwise presents it at launch.
         self.placeholderSettingsWindowGuard.start()
@@ -440,6 +445,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        MenuBarStatusItemWindowProbe.trace("did-finish-launching")
         self.dockIconController.start()
         self.memoryPressureMonitor.start()
         #if DEBUG

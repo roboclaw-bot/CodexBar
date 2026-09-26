@@ -23,6 +23,7 @@ Code subscription credentials.
 - Enriches Code API/CLI usage with the monthly membership pool when a web session is available
 - Automatic menu-bar usage prioritizes an exhausted monthly Total usage pool over reset Code windows; explicit window selections remain authoritative
 - API-key, Kimi Code CLI, automatic cookie, and manual cookie authentication methods
+- Multiple labeled web accounts through the shared token-account editor
 - Automatic refresh countdown
 
 ## Setup
@@ -113,6 +114,12 @@ Cookies database is opened read-only: active WAL databases use SQLite's normal W
 WAL-mode databases with no sidecars use an immutable read-only fallback. CodexBar never creates or modifies
 Kimi Desktop database files.
 
+For the selected region, Automatic mode also reads `access_token` from Chromium browser local storage
+through the shared browser catalog after cookie discovery. Tokens stay bound to the selected Kimi origin;
+expired or malformed tokens are skipped. CodexBar never reads or refreshes browser refresh tokens. Open
+Kimi in your browser to renew an expired session, or use a Kimi Code API key for unattended use.
+Safari and Firefox local storage are not imported.
+
 ### Method 4: Manual Token Entry
 
 For advanced users or when automatic import fails:
@@ -122,11 +129,29 @@ For advanced users or when automatic import fails:
 3. Visit `https://www.kimi.com/code/console` in your browser
 4. Open Developer Tools (F12 or Cmd+Option+I)
 5. Go to **Application** → **Cookies**
-6. Copy the `kimi-auth` cookie value (JWT token)
+6. Copy the `kimi-auth` cookie value (JWT token). On kimi.ai, copy `access_token` from **Local Storage** instead.
 7. Paste it into the "Auth Token" field in CodexBar
 
 Manual mode never imports Desktop or browser credentials, including when the token field is empty or invalid.
 An explicit cookie environment variable can still supply the web token.
+
+### Multiple Web Accounts
+
+In Settings → Providers → Kimi, use **Kimi accounts** to add a label and either the `kimi-auth`
+token value or a Cookie header for each account. Select an account in the existing account list or
+use the shared multi-account display controls. The CLI supports `--account <label>`,
+`--account-index <index>`, and `--all-accounts` for the same saved accounts, including on Linux.
+Manual account cookies use HTTP directly and do not require browser-cookie import support.
+
+Saved accounts use the web usage source with their own manual cookie, even when **Usage source** is
+Auto or API key and **Cookie source** is Automatic or Off. These overrides apply only to the fetch;
+your saved source preferences and single-account credentials are preserved. Removing the final account
+restores those preferences. Invalid or expired account cookies fail for that account without importing
+another browser/Desktop session or falling back to an environment credential.
+
+All saved Kimi accounts use the provider's selected **Region**. Add accounts issued for that region;
+the account list does not support mixing China and International credentials. Accounts and labels use
+the existing `providers[].tokenAccounts` configuration, with no separate Kimi credential store.
 
 ### Cookie Environment Variable
 
@@ -146,8 +171,9 @@ When multiple sources are available, CodexBar uses this order:
 4. Cookie environment variable (`KIMI_AUTH_TOKEN`)
 5. Kimi Desktop `kimi-auth` cookie
 6. Browser cookies (Arc → Chrome → Safari → Edge → Brave → Chromium)
+7. Chromium local storage `access_token` for the selected region
 
-For Code API and CLI results, sources 3–6 are best-effort enrichment only: the required Code usage remains
+For Code API and CLI results, sources 3–7 are best-effort enrichment only: the required Code usage remains
 available if the membership request fails. Setting **Cookie source** to **Off** disables this enrichment and
 does not inspect Kimi Desktop or browser cookies.
 

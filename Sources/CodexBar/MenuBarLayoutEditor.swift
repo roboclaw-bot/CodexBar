@@ -231,7 +231,7 @@ enum MenuBarLayoutEditorPersistence {
     }
 }
 
-private struct MenuBarLayoutPaletteGroup: Identifiable {
+struct MenuBarLayoutPaletteGroup: Identifiable {
     let id: String
     let title: String
     let tokens: [MenuBarLayoutToken]
@@ -603,16 +603,12 @@ struct MenuBarLayoutEditor: View {
         }
     }
 
-    private func palette(_ group: MenuBarLayoutPaletteGroup) -> some View {
+    func palette(_ group: MenuBarLayoutPaletteGroup) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(group.title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 88), spacing: 6)],
-                alignment: .leading,
-                spacing: 6)
-            {
+            MenuBarLayoutChipFlowLayout(spacing: 6) {
                 ForEach(group.tokens, id: \.self) { token in
                     MenuBarLayoutEditorChip(
                         title: token.editorLabel(
@@ -720,48 +716,10 @@ struct MenuBarLayoutEditor: View {
     }
 
     private var displayOptions: some View {
-        HStack(spacing: 18) {
-            Picker(L("menu_bar_layout_size"), selection: self.sizeBinding) {
-                ForEach(MenuBarLayoutSize.allCases) { size in
-                    Text(size.label).tag(size)
-                }
-            }
-            .pickerStyle(.menu)
-
-            Picker(L("menu_bar_layout_gap"), selection: self.gapBinding) {
-                ForEach(MenuBarLayoutGap.allCases) { gap in
-                    Text(gap.label).tag(gap)
-                }
-            }
-            .pickerStyle(.menu)
-
-            HStack(spacing: 8) {
-                Text(L("menu_bar_layout_vertical_adjustment"))
-                    .lineLimit(1)
-                    .fixedSize()
-
-                TextField(
-                    "",
-                    value: self.$settings.menuBarLayoutVerticalAdjustment,
-                    format: .number)
-                    .labelsHidden()
-                    .textFieldStyle(.roundedBorder)
-                    .multilineTextAlignment(.trailing)
-                    .monospacedDigit()
-                    .frame(width: 44)
-
-                Stepper(value: self.$settings.menuBarLayoutVerticalAdjustment, in: -20...20, step: 1) {
-                    EmptyView()
-                }
-                .labelsHidden()
-            }
-
-            Spacer()
-
-            Text(L("menu_bar_layout_keyboard_hint"))
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-        }
+        MenuBarLayoutDisplayOptions(
+            size: self.sizeBinding,
+            gap: self.gapBinding,
+            verticalAdjustment: self.$settings.menuBarLayoutVerticalAdjustment)
     }
 
     private func applyPreset(_ preset: MenuBarLayoutPreset) {
@@ -855,7 +813,7 @@ struct MenuBarLayoutChipLabel: View {
 
 /// Left-aligned wrapping row layout for palette chips.
 ///
-/// The conditionals palette holds user-named chips of widely varying width. An adaptive
+/// Palette chips have widely varying localized and user-defined widths. An adaptive
 /// `LazyVGrid` would size them into equal columns and spread the leftover pane width between
 /// them, and a plain `HStack` would push later chips outside the settings pane; this places each
 /// chip at its natural width and wraps to the next row.
@@ -1346,6 +1304,71 @@ extension MenuBarLayoutToken {
         case .space: "space"
         case .conditional: "switch.2"
         case .hidden: "eye.slash"
+        }
+    }
+}
+
+/// Size, gap, and vertical-offset controls. Pickers stay at their ideal width so the
+/// current selection is always visible without opening the menu.
+struct MenuBarLayoutDisplayOptions: View {
+    @Binding var size: MenuBarLayoutSize
+    @Binding var gap: MenuBarLayoutGap
+    @Binding var verticalAdjustment: Int
+
+    var body: some View {
+        HStack(spacing: 18) {
+            HStack(spacing: 8) {
+                Text(L("menu_bar_layout_size"))
+                    .lineLimit(1)
+                    .fixedSize()
+
+                Picker(L("menu_bar_layout_size"), selection: self.$size) {
+                    ForEach(MenuBarLayoutSize.allCases) { size in
+                        Text(size.label).tag(size)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+            }
+
+            HStack(spacing: 8) {
+                Text(L("menu_bar_layout_gap"))
+                    .lineLimit(1)
+                    .fixedSize()
+
+                Picker(L("menu_bar_layout_gap"), selection: self.$gap) {
+                    ForEach(MenuBarLayoutGap.allCases) { gap in
+                        Text(gap.label).tag(gap)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+            }
+
+            HStack(spacing: 8) {
+                Text(L("menu_bar_layout_vertical_adjustment"))
+                    .lineLimit(1)
+                    .fixedSize()
+
+                TextField(
+                    "",
+                    value: self.$verticalAdjustment,
+                    format: .number)
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.trailing)
+                    .monospacedDigit()
+                    .frame(width: 44)
+
+                Stepper(value: self.$verticalAdjustment, in: -20...20, step: 1) {
+                    EmptyView()
+                }
+                .labelsHidden()
+            }
+
+            Spacer()
         }
     }
 }

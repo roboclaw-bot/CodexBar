@@ -8,7 +8,7 @@ read_when:
 # UI & icon
 
 ## Settings
-- General → Preferred Currency supports Turkish lira (`TRY`, `₺`) alongside the existing currencies, using the shared daily exchange rates and offline fallback for cost estimates.
+- General → Preferred Currency supports Turkish lira (`TRY`, `₺`), New Zealand dollar (`NZD`), `SEK`, `NOK`, `DKK`, `PLN`, `BRL`, `MXN`, `ZAR`, `THB`, `IDR`, `VND`, and `UAH` alongside the existing currencies, using the shared daily exchange rates and offline fallback for cost estimates.
 - General shows the app version and build beside Quit; About keeps its Version row even for Homebrew or unsigned builds.
 - Provider accent colors use a hex field and a color picker that also previews the selected color; Reset restores the provider default.
 - General → Default terminal supports installed Terminal, iTerm, Ghostty, and stable Warp. Terminal is the default and fallback. Warp launches target its app directly and use owner-only temporary tab configs, removed after one minute; interrupted-launch leftovers are cleaned on the next app start.
@@ -17,7 +17,8 @@ read_when:
 - Usage & Spend heatmap tooltips prefer the space above the hovered cell and stay within the grid, falling below when needed. On narrow grids they compact vertically and may overlap cells; keyboard selection remains available in the daily grid.
 - Both the application menu and status menu open About in the Settings window. An existing Settings window is reused
   and switches to the About pane.
-- Homebrew-managed installs show a compact Updates section in About, with a selectable monospaced upgrade command and a trailing copy control. The control confirms successful copies briefly; copying does not run an update.
+- Homebrew-managed installs show an Updates section in About with the automatic-check toggle, Check for Updates, and the tap status: checking, up to date, or "CodexBar x is available" with a prominent "Update to x" button. The menu shows the same "Update to x" action, then "Updating with Homebrew…" while `brew upgrade` runs; the app relaunches after verifying the installed version reached the offered update.
+- If a Homebrew check or update fails, About shows the error with a selectable monospaced upgrade command and a trailing copy control. The control confirms successful copies briefly; copying does not run an update.
 
 ## Menu bar
 - About CodexBar includes the running version. When the updater is available, the menu offers Check for Updates… or the existing staged-update action.
@@ -39,6 +40,11 @@ read_when:
 - Display → Menu Bar → Layout provides presets plus a token editor. Tokens can be clicked to append, dragged from the
   palette, reordered between one or two lines, dragged out, or removed with Delete. Layouts can be global or overridden
   per provider. Manual edits select the Custom preset.
+- For Codex or Claude weekly usage, select that provider in Layout and add **Weekly %** from Usage.
+  For Antigravity's two independent families, add **Gemini weekly %** and **Claude/GPT weekly %**;
+  both appear when known weekly quota-summary data is available. The separate Gemini provider reports
+  Pro/Flash quotas, not these Antigravity family allowances; it does not synthesize a weekly quota.
+- Layout palette chips use their natural label widths and wrap into rows instead of squeezing longer token names into equal-width columns.
 - Time tokens offer Session and Weekly variants of Resets in and Reset at, including in conditional branches.
   The original unqualified reset tokens continue to follow the automatic window. A selected window that is
   unavailable displays a dash rather than substituting another window. Cursor also exposes **Grok Bot %**
@@ -53,6 +59,8 @@ read_when:
   editing still starts from the representative provider's effective layout.
 - Small/Regular controls the token font scale. Tight/Regular controls status-item padding. Compact stacked uses two
   tightly spaced lines sized to fit the menu bar.
+- Size, gap, and vertical adjustment share a compact options row. The Layout section footer keeps the token-editing
+  instructions, including selecting a placed token and pressing Delete to remove it.
 
 ### Layout tokens
 
@@ -63,7 +71,7 @@ read_when:
 | Usage | Grok Bot % (Cursor) | Named allowance percentage; hidden when the allowance is absent |
 | Usage | Session pace, Weekly pace, Auto pace | Signed pace delta for that window |
 | Time | Resets in, Reset at (automatic, Session, Weekly), Runs out | Selected-window relative reset, absolute reset, or pace estimate |
-| Money | Balance, Cost today, Cost 30d | OpenRouter credit balance, or local cost estimate for the selected period |
+| Money | Balance, Cost today, Cost 30d | Provider balance or remaining credits, or local cost estimate for the selected period |
 | Structure | Separator dot, Space, Line break | Spacing and optional two-line composition |
 
 The pace tokens render the same delta the menu card shows as "in deficit"/"in reserve", in the compact signed form the
@@ -79,7 +87,11 @@ preview, and keeps the signed percentages. Zero and unavailable pace stay neutra
 It colors **Session pace**, **Weekly pace**, and **Auto pace** in the layout editor. Enabling it does not add tokens,
 rewrite stored layouts, or migrate legacy display modes. Existing installs stay monochrome until the option is enabled.
 
-Balance is available only for OpenRouter and renders the same remaining-credit value shown in its menu card. Auto %
+Balance uses the same provider amount as the menu card: Codex credits, OpenRouter remaining credits, MiMo,
+DeepSeek, DeepInfra, Moonshot, Poe points, Hypercredits, Atlas Cloud and Vercel available balances, or OpenCode Go's
+Zen balance. DevPass shows remaining billing-cycle credits (a plan allowance); Mistral shows monthly API spend.
+An explicit Balance token remains available alongside quota percentages. Missing amounts render a dash;
+unrelated spend is never substituted. Conditional balance thresholds remain OpenRouter-only. Auto %
 uses the same provider-aware automatic-window resolution as the legacy menu bar metric setting. For balance-only
 providers, Auto % shows the available money, points, or API spend instead of inventing a quota percentage. Both the
 status item and editor preview preserve real quota percentages when a usable limit exists. When a reset token
@@ -182,6 +194,8 @@ In Icon and Percent mode, provider settings expose an Auto, Session, or Weekly p
 Hover over a daily bar in a provider menu’s cost chart to inspect its date, cost, and token count. The highlighted day follows the pointer and clears when it leaves the chart; missing or unpriced values remain unavailable. This does not change cost collection or Settings charts.
 
 ### Daily spend ledger
+
+Long ranges initially show the newest 30 daily rows. **Show all** expands the complete ledger and **Show less** collapses it again; chart data, totals, exports, and coverage still use the full selected reporting period. Provider icons share one tooltip listing the day's active providers.
 
 Usage & Spend includes a daily ledger for each currency group. Rows use the selected bucket time zone and app language, retain priced days when another day is unpriced, and mark unavailable amounts with a dash. When one source on a day has no price, the row shows the known spend of the other sources with a tilde, the same partial marker as the group total. A day with no known spend keeps the dash. Zero-usage rows require established common coverage; unknown activity is not described as idle. Narrow settings windows allow horizontal ledger scrolling. Source filtering and dashboard accounting remain authoritative.
 
