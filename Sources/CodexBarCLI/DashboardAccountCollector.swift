@@ -2,6 +2,73 @@ import CodexBarCore
 import Foundation
 
 extension CodexBarCLI {
+    static func serveUsageOutput(
+        selection: ProviderSelection,
+        context: ServeUsageContext,
+        fetchUsage: @escaping ServeUsageFetcher = CodexBarCLI
+            .fetchServeProviderUsage) async throws -> UsageCommandOutput
+    {
+        let tokenContext = try TokenAccountCLIContext(
+            selection: TokenAccountCLISelection(label: nil, index: nil, allAccounts: false),
+            config: context.config,
+            verbose: false)
+
+        let allTokenContext = try TokenAccountCLIContext(
+            selection: TokenAccountCLISelection(label: nil, index: nil, allAccounts: true),
+            config: context.config,
+            verbose: false)
+        let browserDetection = BrowserDetection()
+        let command = UsageCommandContext(
+            format: .json,
+            includeCredits: true,
+            sourceModeOverride: nil,
+            antigravityPlanDebug: false,
+            augmentDebug: false,
+            webDebugDumpHTML: false,
+            webTimeout: context.providerTimeout ?? 60,
+            verbose: false,
+            useColor: false,
+            resetStyle: Self.resetTimeDisplayStyleFromDefaults(),
+            weeklyWorkDays: Self.weeklyProgressWorkDaysFromDefaults(),
+            jsonOnly: true,
+            includeAllCodexAccounts: context.includeAllCodexAccounts,
+            fetcher: UsageFetcher(),
+            claudeFetcher: ClaudeUsageFetcher(browserDetection: browserDetection),
+            browserDetection: browserDetection,
+            persistCLISessions: context.persistCLISessions,
+            persistentCLISessionIdleWindow: Self.serveCLISessionIdleWindow(
+                refreshInterval: context.refreshInterval))
+
+        return await Self.serveCollectUsageOutputs(
+            providers: selection.asList,
+            configFingerprint: Self.serveUsageOperationFingerprint(
+                configFingerprint: context.configFingerprint,
+                includeAllCodexAccounts: context.includeAllCodexAccounts,
+                includeAllAccounts: context.includeAllAccounts),
+            deadline: context.providerDeadline,
+            operations: context.providerOperations)
+        { provider, publish in
+            await ProviderInteractionContext.$current.withValue(.background) {
+                await fetchUsage(
+                    provider,
+                    Self.serveIncludesConfiguredAccounts(
+                        provider: provider, config: context.config, allAccounts: context.includeAllAccounts)
+                        ? allTokenContext : tokenContext,
+                    command,
+                    context.includeAllAccounts ? publish : nil)
+            }
+        }
+    }
+
+    static func serveUsageOperationFingerprint(
+        configFingerprint: String,
+        includeAllCodexAccounts: Bool,
+        includeAllAccounts: Bool = false) -> String
+    {
+        "\(configFingerprint):codex-accounts=\(includeAllCodexAccounts ? "all" : "selected")"
+            + (includeAllAccounts ? ":token-accounts=all" : "")
+    }
+
     typealias ServeUsageFetcher = @Sendable (
         UsageProvider, TokenAccountCLIContext, UsageCommandContext,
         CLIServeOperationCoordinator<UsageCommandOutput>.PublishPartial?) async -> UsageCommandOutput
